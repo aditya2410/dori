@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export type AddressState = { error: string } | { success: true } | null
 
@@ -29,18 +29,18 @@ export async function addAddress(
   if (!parsed.success) return { error: parsed.error.errors[0].message }
 
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const service = createServiceClient()
+
   // If this is the user's first address, make it default
-  const { count } = await supabase
+  const { count } = await service
     .from('addresses')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id)
 
-  const { error } = await supabase.from('addresses').insert({
+  const { error } = await service.from('addresses').insert({
     user_id: user.id,
     line1: parsed.data.line1,
     line2: parsed.data.line2 ?? null,
@@ -62,29 +62,23 @@ export async function addAddress(
 
 export async function deleteAddress(addressId: string): Promise<void> {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  await supabase.from('addresses').delete().eq('id', addressId).eq('user_id', user.id)
+  const service = createServiceClient()
+  await service.from('addresses').delete().eq('id', addressId).eq('user_id', user.id)
   revalidatePath('/account/addresses')
   revalidatePath('/checkout')
 }
 
 export async function setDefaultAddress(addressId: string): Promise<void> {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  await supabase.from('addresses').update({ is_default: false }).eq('user_id', user.id)
-  await supabase
-    .from('addresses')
-    .update({ is_default: true })
-    .eq('id', addressId)
-    .eq('user_id', user.id)
+  const service = createServiceClient()
+  await service.from('addresses').update({ is_default: false }).eq('user_id', user.id)
+  await service.from('addresses').update({ is_default: true }).eq('id', addressId).eq('user_id', user.id)
 
   revalidatePath('/account/addresses')
 }
