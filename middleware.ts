@@ -5,8 +5,17 @@ const PROTECTED_PREFIXES = ['/checkout', '/account']
 const ADMIN_PREFIX = '/admin'
 
 export async function middleware(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl
+
+  // Supabase PKCE email confirmation sends the code to SITE_URL (root).
+  // Forward it to /callback so the route handler can exchange it for a session.
+  if (pathname === '/' && searchParams.has('code')) {
+    const callbackUrl = request.nextUrl.clone()
+    callbackUrl.pathname = '/callback'
+    return NextResponse.redirect(callbackUrl)
+  }
+
   const { supabaseResponse, user } = await updateSession(request)
-  const { pathname } = request.nextUrl
 
   const needsAuth =
     PROTECTED_PREFIXES.some((p) => pathname.startsWith(p)) ||
