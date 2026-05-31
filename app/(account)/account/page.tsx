@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ProfileForm } from '@/components/account/profile-form'
 import { Separator } from '@/components/ui/separator'
 
@@ -13,7 +13,7 @@ export default async function AccountPage() {
 
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const { data: profile } = await createServiceClient()
     .from('profiles')
     .select('full_name, phone')
     .eq('id', user.id)

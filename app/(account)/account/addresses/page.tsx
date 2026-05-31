@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { MapPin, Star } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Separator } from '@/components/ui/separator'
 import { AddressForm } from '@/components/account/address-form'
 import { deleteAddress, setDefaultAddress } from './actions'
@@ -16,7 +16,7 @@ export default async function AddressesPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: addresses } = await supabase
+  const { data: addresses } = await createServiceClient()
     .from('addresses')
     .select('*')
     .eq('user_id', user.id)

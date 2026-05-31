@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { CheckoutFlow } from '@/components/checkout/checkout-flow'
 
 export const metadata: Metadata = { title: 'Checkout' }
@@ -12,14 +12,15 @@ export default async function CheckoutPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login?next=/checkout')
 
+  const service = createServiceClient()
   const [{ data: addresses }, { data: profile }] = await Promise.all([
-    supabase
+    service
       .from('addresses')
       .select('*')
       .eq('user_id', user.id)
       .order('is_default', { ascending: false })
       .order('created_at'),
-    supabase.from('profiles').select('full_name, phone').eq('id', user.id).single(),
+    service.from('profiles').select('full_name, phone').eq('id', user.id).single(),
   ])
 
   return (

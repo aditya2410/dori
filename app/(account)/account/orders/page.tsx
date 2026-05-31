@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { formatPrice } from '@/lib/utils'
@@ -25,7 +25,7 @@ export default async function OrdersPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: orders } = await supabase
+  const { data: orders } = await createServiceClient()
     .from('orders')
     .select('id, order_number, status, total_paise, created_at')
     .eq('user_id', user.id)

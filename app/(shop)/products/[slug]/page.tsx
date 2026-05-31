@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { formatPrice } from '@/lib/utils'
 import { AddToCart } from '@/components/shop/add-to-cart'
 
@@ -13,8 +13,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const supabase = await createClient()
-  const { data } = await supabase
+  const { data } = await createServiceClient()
     .from('products')
     .select('name, description')
     .eq('slug', slug)
@@ -29,9 +28,8 @@ export default async function ProductDetailPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const supabase = await createClient()
 
-  const { data: product } = await supabase
+  const { data: product } = await createServiceClient()
     .from('products')
     .select('*')
     .eq('slug', slug)

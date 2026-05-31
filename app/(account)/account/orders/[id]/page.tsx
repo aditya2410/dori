@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, Package, Truck, CheckCircle, XCircle, RotateCcw } from 'lucide-react'
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
@@ -51,7 +51,7 @@ export default async function OrderDetailPage({
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: order } = await supabase
+  const { data: order } = await createServiceClient()
     .from('orders')
     .select('*, order_items(product_name, quantity, unit_price_paise, product_id)')
     .eq('id', id)

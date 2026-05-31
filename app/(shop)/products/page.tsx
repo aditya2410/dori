@@ -1,12 +1,11 @@
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { ProductCard } from '@/components/shop/product-card'
 
 export const metadata: Metadata = { title: 'Shop' }
 
 export default async function ProductsPage() {
-  const supabase = await createClient()
-  const { data: products } = await supabase
+  const { data: products } = await createServiceClient()
     .from('products')
     .select('id, slug, name, price_paise, images')
     .eq('is_active', true)
