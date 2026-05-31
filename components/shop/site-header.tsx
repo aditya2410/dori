@@ -12,15 +12,17 @@ export async function SiteHeader() {
 
   return (
     <header className="border-b border-border/60 bg-background">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-8">
+      <div className="container flex h-14 md:h-16 items-center justify-between gap-4">
+
+        {/* Left: logo + nav */}
+        <div className="flex items-center gap-5 md:gap-8">
           <Link
             href="/"
-            className="font-serif text-xl tracking-tight hover:opacity-70 transition-opacity"
+            className="font-serif text-lg md:text-xl tracking-tight hover:opacity-70 transition-opacity shrink-0"
           >
             DORI
           </Link>
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="flex items-center gap-4 md:gap-6">
             <Link
               href="/products"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -30,7 +32,8 @@ export async function SiteHeader() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-0.5">
+        {/* Right: cart + account */}
+        <div className="flex items-center gap-0.5 shrink-0">
           <CartIcon />
           {user ? (
             <Button variant="ghost" size="icon" asChild>
@@ -40,10 +43,11 @@ export async function SiteHeader() {
             </Button>
           ) : (
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/login">Sign in</Link>
+              <Link href="/login" className="text-sm">Sign in</Link>
             </Button>
           )}
         </div>
+
       </div>
     </header>
   )

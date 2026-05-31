@@ -42,7 +42,7 @@ export default async function ProductDetailPage({
   const [mainImage, ...thumbImages] = images
 
   return (
-    <div className="container py-16">
+    <div className="container py-8 md:py-16">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-20">
         {/* Image gallery */}
         <div className="space-y-3">

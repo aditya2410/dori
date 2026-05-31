@@ -30,7 +30,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container py-16">
+    <div className="container py-8 md:py-16">
       <h1 className="font-serif text-4xl font-normal mb-12">
         Cart{' '}
         <span className="font-sans text-lg font-normal text-muted-foreground">

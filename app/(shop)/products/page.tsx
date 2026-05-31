@@ -12,7 +12,7 @@ export default async function ProductsPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="container py-16">
+    <div className="container py-8 md:py-16">
       <div className="mb-12 space-y-1">
         <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">Collection</p>
         <h1 className="font-serif text-4xl font-normal">The Shop</h1>
