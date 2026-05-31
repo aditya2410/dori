@@ -143,7 +143,7 @@ export default function CartPage() {
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">
-            Free shipping on orders above ₹3,000
+            ₹150 flat shipping · Delivered in 3–5 days
           </p>
         </div>
       </div>

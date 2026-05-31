@@ -79,7 +79,7 @@ export default async function ProductDetailPage({
 
           <div className="border-t pt-6 mt-auto">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Free shipping on orders above ₹3,000 &nbsp;·&nbsp; Handcrafted and shipped within 3–5 days
+              ₹150 flat shipping &nbsp;·&nbsp; Handcrafted and shipped within 3–5 days
             </p>
           </div>
         </div>

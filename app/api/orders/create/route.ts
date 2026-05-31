@@ -17,9 +17,9 @@ const bodySchema = z.object({
     .min(1, 'Cart is empty'),
 })
 
-// Free shipping above ₹3,000 (300,000 paise); otherwise ₹99
-function calcShipping(subtotalPaise: number): number {
-  return subtotalPaise >= 300_000 ? 0 : 9_900
+// Fixed shipping — configure via SHIPPING_PAISE env var (default ₹150)
+function calcShipping(_subtotalPaise: number): number {
+  return parseInt(process.env.SHIPPING_PAISE ?? '15000', 10)
 }
 
 export async function POST(request: NextRequest) {

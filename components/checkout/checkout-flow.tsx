@@ -31,8 +31,11 @@ interface CheckoutFlowProps {
 
 type Step = 'address' | 'review'
 
-function calcShipping(subtotalPaise: number) {
-  return subtotalPaise >= 300_000 ? 0 : 9_900
+// Must match the server-side value in api/orders/create
+const SHIPPING_PAISE = 15_000
+
+function calcShipping(_subtotalPaise: number) {
+  return SHIPPING_PAISE
 }
 
 export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: CheckoutFlowProps) {
