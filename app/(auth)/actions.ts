@@ -74,6 +74,13 @@ export async function signup(_prev: AuthState, formData: FormData): Promise<Auth
     return { error: error.message }
   }
 
+  // When email confirmation is enabled, Supabase silently re-sends a notification
+  // to existing accounts instead of returning an error (prevents email enumeration).
+  // An existing account is identified by an empty identities array.
+  if (data.user && data.user.identities && data.user.identities.length === 0) {
+    return { error: 'An account with this email already exists. Try signing in.' }
+  }
+
   // Supabase returns a session immediately if email confirmation is disabled.
   // If email confirmation is enabled, data.session is null.
   if (!data.session) {
