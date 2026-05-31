@@ -127,8 +127,10 @@ export async function sendPasswordReset(
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
   const supabase = await createClient()
+  // Route through /callback so the code is exchanged in a Route Handler
+  // (Server Components cannot set cookies, Route Handlers can).
   await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl}/reset-password`,
+    redirectTo: `${siteUrl}/callback?next=/reset-password`,
   })
 
   // Always return same message — don't reveal whether email exists

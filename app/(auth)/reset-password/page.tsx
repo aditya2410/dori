@@ -2,24 +2,15 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ResetPasswordForm } from './form'
 
-export default async function ResetPasswordPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ code?: string }>
-}) {
-  const { code } = await searchParams
-
-  if (!code) redirect('/forgot-password')
-
-  // Exchange the one-time code for a session so updateUser works
+export default async function ResetPasswordPage() {
+  // Session was set by /callback (Route Handler) after exchanging the code.
+  // If no session exists, the link was invalid or already used.
   const supabase = await createClient()
-  const { error } = await supabase.auth.exchangeCodeForSession(code)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (error) {
-    redirect(
-      `/login?error=reset_failed&reason=${encodeURIComponent(error.message)}`,
-    )
-  }
+  if (!user) redirect('/forgot-password')
 
   return <ResetPasswordForm />
 }
