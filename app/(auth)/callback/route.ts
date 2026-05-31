@@ -16,7 +16,8 @@ export async function GET(request: NextRequest) {
   if (tokenHash) {
     const { error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
-      type: type as 'recovery' | 'signup' | 'email',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      type: type as any,
     })
     if (!error) return NextResponse.redirect(`${base}${redirectTo}`)
     console.error('[callback] verifyOtp error:', error.message)
