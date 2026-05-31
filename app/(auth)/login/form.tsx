@@ -26,9 +26,11 @@ export default function LoginForm() {
 
   const [state, formAction] = useActionState(login, null)
 
+  const reason = searchParams.get('reason')
   const errorMessage =
     (state && 'error' in state ? state.error : null) ??
-    (urlError === 'google_oauth_failed' ? 'Google sign-in failed. Please try again.' : null)
+    (urlError === 'google_oauth_failed' ? 'Google sign-in failed. Please try again.' : null) ??
+    (urlError === 'callback_failed' ? `Sign-in link failed${reason ? `: ${reason}` : ''}. Try signing in manually.` : null)
 
   return (
     <div className="w-full max-w-sm space-y-8">
