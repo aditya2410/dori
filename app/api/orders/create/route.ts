@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   const service = createServiceClient()
 
   // ── Verify address belongs to this user ──────────────────────
-  const { data: address } = await supabase
+  const { data: address } = await service
     .from('addresses')
     .select('*')
     .eq('id', addressId)
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
   if (!address) return NextResponse.json({ error: 'Address not found' }, { status: 400 })
 
   // ── Load profile for shipping contact ───────────────────────
-  const { data: profile } = await supabase
+  const { data: profile } = await service
     .from('profiles')
     .select('full_name, phone')
     .eq('id', user.id)
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       subtotal_paise: subtotalPaise,
       shipping_paise: shippingPaise,
       total_paise: totalPaise,
-      shipping_address: shippingAddress,
+      shipping_address: shippingAddress as unknown as import('@/types/database.types').Json,
     })
     .select('id')
     .single()

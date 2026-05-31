@@ -51,12 +51,18 @@ export default async function OrderDetailPage({
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: order } = await createServiceClient()
+  const service = createServiceClient()
+  const { data: order } = await service
     .from('orders')
-    .select('*, order_items(product_name, quantity, unit_price_paise, product_id)')
+    .select('*')
     .eq('id', id)
     .eq('user_id', user.id)
     .single()
+
+  const { data: orderItems } = await service
+    .from('order_items')
+    .select('product_name, quantity, unit_price_paise')
+    .eq('order_id', id)
 
   if (!order) notFound()
 
@@ -137,7 +143,7 @@ export default async function OrderDetailPage({
       {/* Items */}
       <div className="space-y-4">
         <h2 className="font-serif text-xl font-normal">Items</h2>
-        {order.order_items?.map((item, i) => (
+        {orderItems?.map((item, i) => (
           <div key={i} className="flex justify-between text-sm">
             <span>
               {item.product_name}{' '}

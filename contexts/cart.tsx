@@ -91,19 +91,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setUserId(uid)
 
       if (uid && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
-        const { data } = await supabase
-          .from('cart_items')
-          .select('product_id, quantity, products:product_id(id, slug, name, price_paise, images)')
-          .eq('user_id', uid)
+        type CartRow = { product_id: string; quantity: number }
+        type ProductRow = { id: string; slug: string; name: string; price_paise: number; images: unknown }
 
-        if (data?.length) {
-          type ProductRow = {
-            id: string; slug: string; name: string
-            price_paise: number; images: unknown
-          }
+        const cartResult = await supabase.from('cart_items').select('product_id, quantity').eq('user_id', uid)
+        const cartRows = cartResult.data as CartRow[] | null
+
+        if (cartRows?.length) {
+          const productIds = cartRows.map((r) => r.product_id)
+          const prodResult = await supabase.from('products').select('id, slug, name, price_paise, images').in('id', productIds)
+          const products = prodResult.data as ProductRow[] | null
+
+          const productMap = new Map((products ?? []).map((p) => [p.id, p]))
           const loaded: CartItem[] = []
-          for (const row of data) {
-            const p = row.products as unknown as ProductRow | null
+          for (const row of cartRows) {
+            const p = productMap.get(row.product_id)
             if (!p) continue
             const imgs = Array.isArray(p.images) ? (p.images as string[]) : []
             loaded.push({
@@ -130,11 +132,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // ── 4. Debounced DB sync for logged-in users ───────────────
   useEffect(() => {
     if (!userId) return
-    const supabase = createClient()
+    // Cast to any: @supabase/ssr's createBrowserClient has a known type inference
+    // limitation where .from() returns never. Runtime is correct.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = createClient() as any
     const handle = window.setTimeout(async () => {
-      await supabase.from('cart_items').delete().eq('user_id', userId)
+      await db.from('cart_items').delete().eq('user_id', userId)
       if (items.length > 0) {
-        await supabase.from('cart_items').upsert(
+        await db.from('cart_items').upsert(
           items.map((i) => ({
             user_id: userId,
             product_id: i.productId,

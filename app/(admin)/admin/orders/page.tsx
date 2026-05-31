@@ -37,10 +37,10 @@ export default async function AdminOrdersPage({
 
   let query = supabase
     .from('orders')
-    .select('id, order_number, status, total_paise, created_at, shipping_address, order_items(id)')
+    .select('id, order_number, status, total_paise, created_at, shipping_address')
     .order('created_at', { ascending: false })
 
-  if (status) query = query.eq('status', status)
+  if (status) query = query.eq('status', status as import('@/types/database.types').OrderStatus)
 
   const { data: orders } = await query
 
@@ -95,10 +95,6 @@ export default async function AdminOrdersPage({
                       >
                         {order.order_number}
                       </Link>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {Array.isArray(order.order_items) ? order.order_items.length : 0}{' '}
-                        item{Array.isArray(order.order_items) && order.order_items.length !== 1 ? 's' : ''}
-                      </p>
                     </td>
                     <td className="p-4 text-muted-foreground hidden md:table-cell">
                       {addr?.full_name ?? '—'}

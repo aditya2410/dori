@@ -31,11 +31,16 @@ export default async function AdminOrderDetailPage({
 
   const { data: order } = await service
     .from('orders')
-    .select('*, order_items(product_name, quantity, unit_price_paise)')
+    .select('*')
     .eq('id', id)
     .single()
 
   if (!order) notFound()
+
+  const { data: orderItems } = await service
+    .from('order_items')
+    .select('product_name, quantity, unit_price_paise')
+    .eq('order_id', id)
 
   // Get customer email from auth
   let customerEmail = '—'
@@ -87,7 +92,7 @@ export default async function AdminOrderDetailPage({
       {/* Items */}
       <div className="space-y-3">
         <h2 className="font-serif text-xl font-normal">Items</h2>
-        {order.order_items?.map((item, i) => (
+        {orderItems?.map((item, i) => (
           <div key={i} className="flex justify-between text-sm">
             <span>
               {item.product_name}{' '}

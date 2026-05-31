@@ -213,7 +213,16 @@ export interface Database {
       }
     }
     Views: Record<never, never>
-    Functions: Record<never, never>
+    Functions: {
+      decrement_stock: {
+        Args: { p_product_id: string; p_quantity: number }
+        Returns: undefined
+      }
+      increment_stock: {
+        Args: { p_product_id: string; p_quantity: number }
+        Returns: undefined
+      }
+    }
     Enums: Record<never, never>
     CompositeTypes: Record<never, never>
   }
