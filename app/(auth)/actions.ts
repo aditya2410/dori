@@ -115,3 +115,40 @@ export async function logout(): Promise<never> {
   await supabase.auth.signOut()
   redirect('/')
 }
+
+export async function sendPasswordReset(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const email = formData.get('email') as string
+  if (!z.string().email().safeParse(email).success) {
+    return { error: 'Please enter a valid email address.' }
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  const supabase = await createClient()
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/reset-password`,
+  })
+
+  // Always return same message — don't reveal whether email exists
+  return { message: 'If an account exists for that email, a reset link is on its way.' }
+}
+
+export async function updatePassword(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const password = formData.get('password') as string
+  const confirm = formData.get('confirm') as string
+
+  if (password.length < 8) return { error: 'Password must be at least 8 characters.' }
+  if (password !== confirm) return { error: 'Passwords do not match.' }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.updateUser({ password })
+
+  if (error) return { error: error.message }
+
+  redirect('/account')
+}
