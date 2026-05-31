@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
 import type { Metadata } from 'next'
 import { createServiceClient } from '@/lib/supabase/server'
 import { formatPrice } from '@/lib/utils'
 import { AddToCart } from '@/components/shop/add-to-cart'
+import { ImageGallery } from '@/components/shop/image-gallery'
 
 export const revalidate = 3600
 
@@ -39,47 +39,12 @@ export default async function ProductDetailPage({
   if (!product) notFound()
 
   const images = Array.isArray(product.images) ? (product.images as string[]) : []
-  const [mainImage, ...thumbImages] = images
 
   return (
     <div className="container py-8 md:py-16">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-20">
         {/* Image gallery */}
-        <div className="space-y-3">
-          <div className="aspect-[3/4] bg-secondary overflow-hidden relative">
-            {mainImage ? (
-              <Image
-                src={mainImage}
-                alt={product.name}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                unoptimized
-                className="object-cover"
-                priority
-              />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center">
-                <span className="font-serif text-3xl text-muted-foreground">DORI</span>
-              </div>
-            )}
-          </div>
-          {thumbImages.length > 0 && (
-            <div className="grid grid-cols-4 gap-2">
-              {[mainImage, ...thumbImages].map((url, i) => (
-                <div key={i} className="aspect-square bg-secondary overflow-hidden relative">
-                  <Image
-                    src={url}
-                    alt={`${product.name} — view ${i + 1}`}
-                    fill
-                    sizes="10vw"
-                    unoptimized
-                    className="object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ImageGallery images={images} productName={product.name} />
 
         {/* Product info */}
         <div className="flex flex-col gap-6 md:pt-4">
