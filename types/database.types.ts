@@ -174,6 +174,39 @@ export interface Database {
         }
         Relationships: []
       }
+      contact_messages: {
+        Row: {
+          id: string
+          name: string
+          email: string
+          phone: string
+          message: string
+          is_read: boolean
+          ip_address: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          email: string
+          phone: string
+          message: string
+          is_read?: boolean
+          ip_address?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string
+          phone?: string
+          message?: string
+          is_read?: boolean
+          ip_address?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       product_series: {
         Row: {
           product_id: string
