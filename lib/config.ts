@@ -23,8 +23,8 @@ export function getSocialLinks(): SocialLink[] {
 
 export const heroConfig = {
   image: '/images/hero.webp',
-  headline: 'Crafted with love.',
-  subheadline: 'Made in Jaipur, by hands that have done this for generations.',
+  headline: 'One pearl at a time.',
+  subheadline: 'From our hands, with love in every seam.',
   ctaText: 'EXPLORE COLLECTIONS',
   ctaHref: '/collections',
 } as const
