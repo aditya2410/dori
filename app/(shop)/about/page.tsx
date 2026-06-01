@@ -12,13 +12,13 @@ export default function AboutPage() {
       {/* ── Hero strip ── */}
       <section className="relative w-full h-[60vh] md:h-[80vh] overflow-hidden">
         <Image
-          src="/images/hero.webp"
+          src="/images/aboutus.jpg"
           alt="Made in Jaipur"
           fill
           sizes="100vw"
           quality={90}
           priority
-          className="object-cover object-center"
+          className="object-cover object-top"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
         <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
@@ -37,8 +37,9 @@ export default function AboutPage() {
 
         <p className="font-serif text-lg md:text-xl leading-relaxed text-foreground mb-8">
           Every bead, every stitch, every thread you find in a Dori piece has been touched by
-          hands that know this craft like a language. Hands that grew up watching grandfathers
-          and fathers do this work, and now do it themselves with the same patience.
+          hands that know this craft like a language. Hands that belong mostly to women —
+          homemakers who have turned their skill and patience into something they are proud of,
+          earning on their own terms, without leaving their homes or their families.
         </p>
 
         <p className="font-serif text-lg md:text-xl leading-relaxed text-foreground mb-8">
