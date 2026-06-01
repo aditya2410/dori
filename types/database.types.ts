@@ -106,6 +106,8 @@ export interface Database {
           images: Json
           stock: number
           is_active: boolean
+          is_bestseller: boolean
+          bestseller_order: number | null
           created_at: string
         }
         Insert: {
@@ -117,6 +119,8 @@ export interface Database {
           images?: Json
           stock?: number
           is_active?: boolean
+          is_bestseller?: boolean
+          bestseller_order?: number | null
           created_at?: string
         }
         Update: {
@@ -128,7 +132,60 @@ export interface Database {
           images?: Json
           stock?: number
           is_active?: boolean
+          is_bestseller?: boolean
+          bestseller_order?: number | null
           created_at?: string
+        }
+        Relationships: []
+      }
+      series: {
+        Row: {
+          id: string
+          slug: string
+          name: string
+          description: string | null
+          cover_image_url: string | null
+          display_order: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          name: string
+          description?: string | null
+          cover_image_url?: string | null
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          name?: string
+          description?: string | null
+          cover_image_url?: string | null
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      product_series: {
+        Row: {
+          product_id: string
+          series_id: string
+        }
+        Insert: {
+          product_id: string
+          series_id: string
+        }
+        Update: {
+          product_id?: string
+          series_id?: string
         }
         Relationships: []
       }
