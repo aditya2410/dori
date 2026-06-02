@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ProfileForm } from '@/components/account/profile-form'
 import { Separator } from '@/components/ui/separator'
-import { AccountSubNav } from '@/components/account/account-sub-nav'
 
 export const metadata: Metadata = { title: 'Profile' }
 
@@ -21,16 +20,13 @@ export default async function ProfilePage() {
     .single()
 
   return (
-    <>
-      <AccountSubNav />
-      <main className="container py-12 max-w-2xl space-y-8">
-        <div className="space-y-1">
-          <h1 className="font-serif text-3xl font-normal">Profile</h1>
-          <p className="text-sm text-muted-foreground">{user.email}</p>
-        </div>
-        <Separator />
-        <ProfileForm fullName={profile?.full_name ?? null} phone={profile?.phone ?? null} />
-      </main>
-    </>
+    <div className="space-y-8">
+      <div className="space-y-1">
+        <h1 className="font-serif text-3xl font-normal">Profile</h1>
+        <p className="text-sm text-muted-foreground">{user.email}</p>
+      </div>
+      <Separator />
+      <ProfileForm fullName={profile?.full_name ?? null} phone={profile?.phone ?? null} />
+    </div>
   )
 }
