@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { BLUR_PLACEHOLDER } from '@/lib/utils'
 
@@ -11,6 +11,7 @@ interface ImageGalleryProps {
 
 export function ImageGallery({ images, productName }: ImageGalleryProps) {
   const [active, setActive] = useState(0)
+  const touchStartX = useRef<number | null>(null)
 
   if (images.length === 0) {
     return (
@@ -20,10 +21,33 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
     )
   }
 
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return
+    const delta = e.changedTouches[0].clientX - touchStartX.current
+    touchStartX.current = null
+
+    if (Math.abs(delta) < 40) return // ignore taps
+    if (delta < 0) {
+      // swipe left → next
+      setActive((prev) => Math.min(prev + 1, images.length - 1))
+    } else {
+      // swipe right → previous
+      setActive((prev) => Math.max(prev - 1, 0))
+    }
+  }
+
   return (
     <div className="space-y-3">
-      {/* Main image */}
-      <div className="aspect-[3/4] bg-secondary overflow-hidden relative">
+      {/* Main image — swipeable on touch */}
+      <div
+        className="aspect-[3/4] bg-secondary overflow-hidden relative"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <Image
           src={images[active]}
           alt={productName}
@@ -34,11 +58,28 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
           className="object-cover transition-opacity duration-300"
           priority
         />
+
+        {/* Dot indicators on mobile */}
+        {images.length > 1 && (
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 md:hidden">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setActive(i)}
+                aria-label={`Go to image ${i + 1}`}
+                className={`size-1.5 rounded-full transition-colors ${
+                  i === active ? 'bg-white' : 'bg-white/40'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Thumbnails */}
+      {/* Thumbnails — desktop only */}
       {images.length > 1 && (
-        <div className="grid grid-cols-4 gap-2">
+        <div className="hidden md:grid grid-cols-4 gap-2">
           {images.map((url, i) => (
             <button
               key={url}
