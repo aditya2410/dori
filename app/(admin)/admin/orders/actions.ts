@@ -6,6 +6,7 @@ import { getRazorpay } from '@/lib/razorpay'
 import { sendShippingEmail } from '@/lib/email'
 
 export type ShipState = { error: string } | null
+export type RefundState = { error: string } | { success: true } | null
 
 function revalidate(orderId: string) {
   revalidatePath(`/admin/orders/${orderId}`)
@@ -82,7 +83,10 @@ export async function cancelOrder(orderId: string): Promise<void> {
   revalidate(orderId)
 }
 
-export async function refundOrder(orderId: string): Promise<void> {
+export async function refundOrder(
+  orderId: string,
+  _prev: RefundState,
+): Promise<RefundState> {
   const service = createServiceClient()
 
   const { data: order } = await service
@@ -91,7 +95,6 @@ export async function refundOrder(orderId: string): Promise<void> {
     .eq('id', orderId)
     .single()
 
-  // Attempt Razorpay refund if payment ID exists
   if (order?.razorpay_payment_id) {
     try {
       await getRazorpay().payments.refund(order.razorpay_payment_id, {
@@ -99,7 +102,10 @@ export async function refundOrder(orderId: string): Promise<void> {
       })
     } catch (err) {
       console.error('[refundOrder] Razorpay refund failed:', err)
-      // Continue marking as refunded even if API call fails — admin can retry in Razorpay dashboard
+      return {
+        error:
+          'Razorpay refund failed — the order has NOT been marked as refunded. Please go to your Razorpay Dashboard → Payments, find this payment and issue the refund manually. Then come back and the status will update once Razorpay confirms it via webhook.',
+      }
     }
   }
 
@@ -110,4 +116,5 @@ export async function refundOrder(orderId: string): Promise<void> {
     .in('status', ['paid', 'shipped', 'delivered'])
 
   revalidate(orderId)
+  return { success: true }
 }

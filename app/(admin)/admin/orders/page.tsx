@@ -10,12 +10,13 @@ import type { OrderStatus, ShippingAddress } from '@/types/database.types'
 export const metadata: Metadata = { title: 'Orders — Admin' }
 
 const FILTERS = [
-  { label: 'All',       value: '' },
-  { label: 'Paid',      value: 'paid' },
-  { label: 'Shipped',   value: 'shipped' },
-  { label: 'Delivered', value: 'delivered' },
-  { label: 'Cancelled', value: 'cancelled' },
-  { label: 'Refunded',  value: 'refunded' },
+  { label: 'All',               value: '' },
+  { label: 'Awaiting Payment',  value: 'created' },
+  { label: 'Paid',              value: 'paid' },
+  { label: 'Shipped',           value: 'shipped' },
+  { label: 'Delivered',         value: 'delivered' },
+  { label: 'Cancelled',         value: 'cancelled' },
+  { label: 'Refunded',          value: 'refunded' },
 ]
 
 const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'success' | 'destructive' | 'outline'> = {
@@ -25,6 +26,15 @@ const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'success' | '
   delivered: 'success',
   cancelled: 'destructive',
   refunded:  'secondary',
+}
+
+const statusLabel: Record<OrderStatus, string> = {
+  created:   'Awaiting Payment',
+  paid:      'Paid — Ready to Ship',
+  shipped:   'Shipped',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+  refunded:  'Refunded',
 }
 
 export default async function AdminOrdersPage({
@@ -40,13 +50,20 @@ export default async function AdminOrdersPage({
     .select('id, order_number, status, total_paise, created_at, shipping_address')
     .order('created_at', { ascending: false })
 
-  if (status) query = query.eq('status', status as import('@/types/database.types').OrderStatus)
+  if (status) query = query.eq('status', status as OrderStatus)
 
   const { data: orders } = await query
 
   return (
     <div className="space-y-8">
-      <h1 className="font-serif text-3xl font-normal">Orders</h1>
+      <div>
+        <h1 className="font-serif text-3xl font-normal">Orders</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          When an order is <strong>Paid</strong>, mark it shipped (enter a tracking number), then mark it delivered once it arrives.
+        </p>
+      </div>
+
+      <Separator />
 
       {/* Status filter tabs */}
       <div className="flex items-center gap-1 flex-wrap">
@@ -106,7 +123,7 @@ export default async function AdminOrdersPage({
                     </td>
                     <td className="p-4">
                       <Badge variant={statusVariant[order.status as OrderStatus]}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        {statusLabel[order.status as OrderStatus] ?? order.status}
                       </Badge>
                     </td>
                     <td className="p-4 text-right font-medium">

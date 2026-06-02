@@ -8,6 +8,7 @@ import {
   cancelOrder,
   refundOrder,
   type ShipState,
+  type RefundState,
 } from '@/app/(admin)/admin/orders/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,13 +33,15 @@ export function OrderActions({ orderId, status }: OrderActionsProps) {
   const boundShip = markShippedAction.bind(null, orderId)
   const [shipState, shipAction] = useActionState<ShipState, FormData>(boundShip, null)
 
-  // No actions once the order is in a terminal non-refundable state
+  const boundRefund = refundOrder.bind(null, orderId)
+  const [refundState, refundAction] = useActionState<RefundState, FormData>(boundRefund, null)
+
   if (status === 'cancelled' || status === 'refunded') return null
 
-  const canShip     = status === 'paid'
-  const canDeliver  = status === 'shipped'
-  const canRefund   = status === 'paid' || status === 'shipped' || status === 'delivered'
-  const canCancel   = status === 'paid' || status === 'created'
+  const canShip    = status === 'paid'
+  const canDeliver = status === 'shipped'
+  const canRefund  = status === 'paid' || status === 'shipped' || status === 'delivered'
+  const canCancel  = status === 'paid' || status === 'created'
 
   return (
     <div className="border p-5 space-y-4">
@@ -57,14 +60,21 @@ export function OrderActions({ orderId, status }: OrderActionsProps) {
 
         {canDeliver && (
           <form action={markDelivered.bind(null, orderId)}>
-            <Button type="submit" size="sm" variant={canShip ? 'outline' : 'default'}>
+            <Button type="submit" size="sm" variant="default">
               Mark as Delivered
             </Button>
           </form>
         )}
 
         {canRefund && (
-          <form action={refundOrder.bind(null, orderId)}>
+          <form
+            action={refundAction}
+            onSubmit={(e) => {
+              if (!window.confirm('Issue a full refund to the customer? This cannot be undone.')) {
+                e.preventDefault()
+              }
+            }}
+          >
             <Button type="submit" size="sm" variant="outline">
               Issue Refund
             </Button>
@@ -72,13 +82,31 @@ export function OrderActions({ orderId, status }: OrderActionsProps) {
         )}
 
         {canCancel && (
-          <form action={cancelOrder.bind(null, orderId)}>
+          <form
+            action={cancelOrder.bind(null, orderId)}
+            onSubmit={(e) => {
+              if (!window.confirm('Cancel this order? Stock will be restored but this cannot be undone.')) {
+                e.preventDefault()
+              }
+            }}
+          >
             <Button type="submit" size="sm" variant="outline">
               Cancel Order
             </Button>
           </form>
         )}
       </div>
+
+      {/* Refund result messages */}
+      {refundState && 'error' in refundState && (
+        <div className="rounded border border-destructive/40 bg-destructive/5 p-4 space-y-1">
+          <p className="text-sm font-medium text-destructive">Refund could not be processed automatically</p>
+          <p className="text-sm text-muted-foreground">{refundState.error}</p>
+        </div>
+      )}
+      {refundState && 'success' in refundState && (
+        <p className="text-sm text-green-700">Refund issued successfully via Razorpay.</p>
+      )}
 
       {/* Inline ship form */}
       {showShipForm && status === 'paid' && (

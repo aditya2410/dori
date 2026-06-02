@@ -43,7 +43,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Link href="/admin/products">Products</Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/admin/series">Series</Link>
+              <Link href="/admin/series">Collections</Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
               <Link href="/admin/orders">Orders</Link>

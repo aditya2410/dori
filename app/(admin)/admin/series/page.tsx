@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { toggleSeriesActive } from './actions'
 import { DeleteSeriesButton } from '@/components/admin/delete-series-button'
 
-export const metadata: Metadata = { title: 'Series — Admin' }
+export const metadata: Metadata = { title: 'Collections — Admin' }
 
 export default async function AdminSeriesPage() {
   const supabase = createServiceClient()
@@ -20,7 +20,6 @@ export default async function AdminSeriesPage() {
     supabase.from('product_series').select('series_id'),
   ])
 
-  // Count products per series
   const countMap = new Map<string, number>()
   for (const row of productSeriesRows ?? []) {
     countMap.set(row.series_id, (countMap.get(row.series_id) ?? 0) + 1)
@@ -29,27 +28,31 @@ export default async function AdminSeriesPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="font-serif text-3xl font-normal">Series</h1>
+        <div>
+          <h1 className="font-serif text-3xl font-normal">Collections</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Group products into collections shown in your shop navigation.
+          </p>
+        </div>
         <Button asChild size="sm">
           <Link href="/admin/series/new">
             <Plus className="size-4" />
-            New series
+            New collection
           </Link>
         </Button>
       </div>
 
       {!seriesList?.length ? (
-        <p className="text-muted-foreground text-sm py-8">No series yet. Create your first one.</p>
+        <p className="text-muted-foreground text-sm py-8">No collections yet. Click "New collection" to get started.</p>
       ) : (
         <div className="border">
           <table className="w-full text-sm">
             <thead className="border-b bg-secondary/40">
               <tr>
-                <th className="text-left p-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Name</th>
-                <th className="text-left p-4 text-xs font-medium uppercase tracking-wider text-muted-foreground hidden md:table-cell">Slug</th>
+                <th className="text-left p-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Collection</th>
                 <th className="text-left p-4 text-xs font-medium uppercase tracking-wider text-muted-foreground hidden md:table-cell">Products</th>
-                <th className="text-left p-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Order</th>
-                <th className="text-left p-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</th>
+                <th className="text-left p-4 text-xs font-medium uppercase tracking-wider text-muted-foreground hidden md:table-cell">Display Position</th>
+                <th className="text-left p-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Visibility</th>
                 <th className="p-4" />
               </tr>
             </thead>
@@ -65,12 +68,13 @@ export default async function AdminSeriesPage() {
                       <span className="font-medium">{s.name}</span>
                     </div>
                   </td>
-                  <td className="p-4 text-muted-foreground font-mono text-xs hidden md:table-cell">{s.slug}</td>
-                  <td className="p-4 text-muted-foreground hidden md:table-cell">{countMap.get(s.id) ?? 0}</td>
-                  <td className="p-4 text-muted-foreground">{s.display_order}</td>
+                  <td className="p-4 text-muted-foreground hidden md:table-cell">
+                    {countMap.get(s.id) ?? 0} {(countMap.get(s.id) ?? 0) === 1 ? 'product' : 'products'}
+                  </td>
+                  <td className="p-4 text-muted-foreground hidden md:table-cell">#{s.display_order}</td>
                   <td className="p-4">
                     <Badge variant={s.is_active ? 'success' : 'secondary'}>
-                      {s.is_active ? 'Active' : 'Inactive'}
+                      {s.is_active ? 'Visible in shop' : 'Hidden from shop'}
                     </Badge>
                   </td>
                   <td className="p-4">
@@ -83,7 +87,7 @@ export default async function AdminSeriesPage() {
                       </Button>
                       <form action={toggleSeriesActive.bind(null, s.id, !s.is_active)}>
                         <Button type="submit" variant="ghost" size="sm">
-                          {s.is_active ? 'Deactivate' : 'Activate'}
+                          {s.is_active ? 'Hide from shop' : 'Show in shop'}
                         </Button>
                       </form>
                       <DeleteSeriesButton seriesId={s.id} seriesName={s.name} />
