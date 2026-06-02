@@ -36,7 +36,7 @@ export function OrderActions({ orderId, status }: OrderActionsProps) {
   if (status === 'cancelled' || status === 'refunded') return null
 
   const canShip     = status === 'paid'
-  const canDeliver  = status === 'paid' || status === 'shipped'
+  const canDeliver  = status === 'shipped'
   const canRefund   = status === 'paid' || status === 'shipped' || status === 'delivered'
   const canCancel   = status === 'paid' || status === 'created'
 
