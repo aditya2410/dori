@@ -1,7 +1,8 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useOptimistic, useTransition, useState } from 'react'
 import { useFormStatus } from 'react-dom'
+import { Loader2 } from 'lucide-react'
 import {
   markShippedAction,
   markDelivered,
@@ -14,34 +15,58 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-interface OrderActionsProps {
-  orderId: string
-  status: string
-}
-
 function ShipSubmitButton() {
   const { pending } = useFormStatus()
   return (
     <Button type="submit" size="sm" disabled={pending}>
+      {pending && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
       {pending ? 'Saving…' : 'Confirm shipment'}
     </Button>
   )
 }
 
-export function OrderActions({ orderId, status }: OrderActionsProps) {
+function RefundButton() {
+  const { pending } = useFormStatus()
+  return (
+    <Button type="submit" size="sm" variant="outline" disabled={pending}>
+      {pending && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
+      {pending ? 'Processing…' : 'Issue Refund'}
+    </Button>
+  )
+}
+
+export function OrderActions({ orderId, status }: { orderId: string; status: string }) {
   const [showShipForm, setShowShipForm] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const [optimisticStatus, setOptimisticStatus] = useOptimistic(status)
+
   const boundShip = markShippedAction.bind(null, orderId)
   const [shipState, shipAction] = useActionState<ShipState, FormData>(boundShip, null)
 
   const boundRefund = refundOrder.bind(null, orderId)
   const [refundState, refundAction] = useActionState<RefundState, FormData>(boundRefund, null)
 
-  if (status === 'cancelled' || status === 'refunded') return null
+  if (optimisticStatus === 'cancelled' || optimisticStatus === 'refunded') return null
 
-  const canShip    = status === 'paid'
-  const canDeliver = status === 'shipped'
-  const canRefund  = status === 'paid' || status === 'shipped' || status === 'delivered'
-  const canCancel  = status === 'paid' || status === 'created'
+  const canShip    = optimisticStatus === 'paid'
+  const canDeliver = optimisticStatus === 'shipped'
+  const canRefund  = ['paid', 'shipped', 'delivered'].includes(optimisticStatus)
+  const canCancel  = ['paid', 'created'].includes(optimisticStatus)
+
+  function handleDeliver() {
+    startTransition(async () => {
+      setOptimisticStatus('delivered')
+      await markDelivered(orderId)
+    })
+  }
+
+  function handleCancel() {
+    if (!window.confirm('Cancel this order? Stock will be restored but this cannot be undone.')) return
+    startTransition(async () => {
+      setOptimisticStatus('cancelled')
+      await cancelOrder(orderId)
+    })
+  }
 
   return (
     <div className="border p-5 space-y-4">
@@ -59,11 +84,10 @@ export function OrderActions({ orderId, status }: OrderActionsProps) {
         )}
 
         {canDeliver && (
-          <form action={markDelivered.bind(null, orderId)}>
-            <Button type="submit" size="sm" variant="default">
-              Mark as Delivered
-            </Button>
-          </form>
+          <Button size="sm" variant="default" disabled={isPending} onClick={handleDeliver}>
+            {isPending && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
+            {isPending ? 'Saving…' : 'Mark as Delivered'}
+          </Button>
         )}
 
         {canRefund && (
@@ -75,25 +99,15 @@ export function OrderActions({ orderId, status }: OrderActionsProps) {
               }
             }}
           >
-            <Button type="submit" size="sm" variant="outline">
-              Issue Refund
-            </Button>
+            <RefundButton />
           </form>
         )}
 
         {canCancel && (
-          <form
-            action={cancelOrder.bind(null, orderId)}
-            onSubmit={(e) => {
-              if (!window.confirm('Cancel this order? Stock will be restored but this cannot be undone.')) {
-                e.preventDefault()
-              }
-            }}
-          >
-            <Button type="submit" size="sm" variant="outline">
-              Cancel Order
-            </Button>
-          </form>
+          <Button size="sm" variant="outline" disabled={isPending} onClick={handleCancel}>
+            {isPending && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
+            {isPending ? 'Working…' : 'Cancel Order'}
+          </Button>
         )}
       </div>
 
@@ -109,29 +123,18 @@ export function OrderActions({ orderId, status }: OrderActionsProps) {
       )}
 
       {/* Inline ship form */}
-      {showShipForm && status === 'paid' && (
+      {showShipForm && optimisticStatus === 'paid' && (
         <form action={shipAction} className="space-y-3 pt-2 border-t">
           <div className="space-y-1.5">
             <Label htmlFor="tracking">Tracking number</Label>
-            <Input
-              id="tracking"
-              name="tracking"
-              placeholder="DTDC1234567890"
-              autoFocus
-              required
-            />
+            <Input id="tracking" name="tracking" placeholder="DTDC1234567890" autoFocus required />
           </div>
           {shipState && 'error' in shipState && (
             <p className="text-sm text-destructive">{shipState.error}</p>
           )}
           <div className="flex gap-2">
             <ShipSubmitButton />
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={() => setShowShipForm(false)}
-            >
+            <Button type="button" size="sm" variant="ghost" onClick={() => setShowShipForm(false)}>
               Cancel
             </Button>
           </div>
