@@ -6,7 +6,6 @@ import { Loader2 } from 'lucide-react'
 import {
   markShippedAction,
   markDelivered,
-  cancelOrder,
   type ShipState,
 } from '@/app/(admin)/admin/orders/actions'
 import { Button } from '@/components/ui/button'
@@ -36,7 +35,6 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
 
   const canShip    = optimisticStatus === 'paid'
   const canDeliver = optimisticStatus === 'shipped'
-  const canCancel  = ['paid', 'created'].includes(optimisticStatus)
 
   function handleDeliver() {
     startTransition(async () => {
@@ -45,15 +43,7 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
     })
   }
 
-  function handleCancel() {
-    if (!window.confirm('Cancel this order? Stock will be restored but this cannot be undone.')) return
-    startTransition(async () => {
-      setOptimisticStatus('cancelled')
-      await cancelOrder(orderId)
-    })
-  }
-
-  return (
+return (
     <div className="border p-5 space-y-4">
       <p className="text-xs uppercase tracking-wider text-muted-foreground">Actions</p>
 
@@ -75,12 +65,6 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
           </Button>
         )}
 
-        {canCancel && (
-          <Button size="sm" variant="outline" disabled={isPending} onClick={handleCancel}>
-            {isPending && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
-            {isPending ? 'Working…' : 'Cancel Order'}
-          </Button>
-        )}
       </div>
 
       {/* Inline ship form */}
