@@ -79,6 +79,7 @@ export async function updateSeries(
       display_order: parsed.data.display_order,
       is_active: formData.get('is_active') === 'on',
       cover_image_url: parsed.data.cover_image_url ?? null,
+      image_position: parsed.data.image_position,
     })
     .eq('id', seriesId)
 
