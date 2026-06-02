@@ -147,6 +147,7 @@ export async function updateProduct(
   revalidatePath('/admin/products')
   revalidatePath(`/products/${parsed.data.slug}`)
   revalidatePath('/products')
+  revalidatePath('/collections', 'layout')
   revalidatePath('/')
   redirect('/admin/products')
 }
