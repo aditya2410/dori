@@ -2,11 +2,9 @@
 
 import { usePathname } from 'next/navigation'
 import { AnimatedContent } from '@/components/ui/animated-content'
+import { SiteFooter } from '@/components/shop/site-footer'
 
-// Server Components can be passed as props to Client Components.
-// This lets us conditionally render SiteHeader based on pathname
-// without making the layout itself a Client Component.
-const HEADERLESS = ['/checkout']
+const CHROME_HIDDEN = ['/checkout']
 
 export function ShopLayoutClient({
   header,
@@ -16,12 +14,13 @@ export function ShopLayoutClient({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const showHeader = !HEADERLESS.some((p) => pathname === p || pathname.startsWith(p + '/'))
+  const showChrome = !CHROME_HIDDEN.some((p) => pathname === p || pathname.startsWith(p + '/'))
 
   return (
     <>
-      {showHeader && header}
+      {showChrome && header}
       <AnimatedContent>{children}</AnimatedContent>
+      {showChrome && <SiteFooter />}
     </>
   )
 }
