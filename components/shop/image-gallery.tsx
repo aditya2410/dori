@@ -11,6 +11,8 @@ interface ImageGalleryProps {
 
 export function ImageGallery({ images, productName }: ImageGalleryProps) {
   const [active, setActive] = useState(0)
+  const [dragOffset, setDragOffset] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
   const touchStartX = useRef<number | null>(null)
 
   if (images.length === 0) {
@@ -23,43 +25,65 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
 
   function handleTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX
+    setIsDragging(true)
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (touchStartX.current === null) return
+    setDragOffset(e.touches[0].clientX - touchStartX.current)
   }
 
   function handleTouchEnd(e: React.TouchEvent) {
     if (touchStartX.current === null) return
     const delta = e.changedTouches[0].clientX - touchStartX.current
     touchStartX.current = null
+    setIsDragging(false)
+    setDragOffset(0)
 
-    if (Math.abs(delta) < 40) return // ignore taps
-    if (delta < 0) {
-      // swipe left → next
-      setActive((prev) => Math.min(prev + 1, images.length - 1))
-    } else {
-      // swipe right → previous
-      setActive((prev) => Math.max(prev - 1, 0))
-    }
+    if (Math.abs(delta) < 40) return
+    if (delta < 0) setActive((p) => Math.min(p + 1, images.length - 1))
+    else setActive((p) => Math.max(p - 1, 0))
   }
 
   return (
     <div className="space-y-3">
-      {/* Main image — swipeable on touch */}
+      {/* Main strip */}
       <div
         className="aspect-[3/4] bg-secondary overflow-hidden relative"
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <Image
-          src={images[active]}
-          alt={productName}
-          fill
-          sizes="(max-width: 768px) 100vw, 50vw"
-          placeholder="blur"
-          blurDataURL={BLUR_PLACEHOLDER}
-          className="object-cover transition-opacity duration-300"
-          priority
-        />
+        <div
+          className="flex h-full"
+          style={{
+            width: `${images.length * 100}%`,
+            transform: `translateX(calc(-${(active / images.length) * 100}% + ${dragOffset / images.length}px))`,
+            transition: isDragging ? 'none' : 'transform 380ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            willChange: 'transform',
+          }}
+        >
+          {images.map((url, i) => (
+            <div
+              key={url}
+              className="relative h-full"
+              style={{ width: `${100 / images.length}%` }}
+            >
+              <Image
+                src={url}
+                alt={`${productName} — ${i + 1}`}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                placeholder="blur"
+                blurDataURL={BLUR_PLACEHOLDER}
+                className="object-cover"
+                priority={i === 0}
+              />
+            </div>
+          ))}
+        </div>
 
-        {/* Dot indicators on mobile */}
+        {/* Dot indicators — mobile */}
         {images.length > 1 && (
           <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 md:hidden">
             {images.map((_, i) => (
@@ -68,7 +92,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
                 type="button"
                 onClick={() => setActive(i)}
                 aria-label={`Go to image ${i + 1}`}
-                className={`size-1.5 rounded-full transition-colors ${
+                className={`size-1.5 rounded-full transition-colors duration-200 ${
                   i === active ? 'bg-white' : 'bg-white/40'
                 }`}
               />
@@ -77,7 +101,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
         )}
       </div>
 
-      {/* Thumbnails — desktop only */}
+      {/* Thumbnails — desktop */}
       {images.length > 1 && (
         <div className="hidden md:grid grid-cols-4 gap-2">
           {images.map((url, i) => (
