@@ -80,11 +80,37 @@ export default async function AdminOrderDetailPage({
       <Separator />
 
       {/* Customer */}
-      <div className="space-y-1 text-sm">
-        <h2 className="font-serif text-xl font-normal mb-3">Customer</h2>
-        <p className="font-medium">{addr.full_name}</p>
-        <p className="text-muted-foreground">{customerEmail}</p>
-        {addr.phone && <p className="text-muted-foreground">{addr.phone}</p>}
+      <div className="space-y-3 text-sm">
+        <h2 className="font-serif text-xl font-normal">Customer</h2>
+        <div className="border p-4 space-y-2">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-0.5">Name</p>
+              <p className="font-medium">{addr.full_name}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-0.5">Account email</p>
+              <a href={`mailto:${customerEmail}`} className="hover:underline">{customerEmail}</a>
+            </div>
+            {addr.phone && (
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-0.5">Phone</p>
+                <a href={`tel:${addr.phone}`} className="hover:underline">{addr.phone}</a>
+              </div>
+            )}
+            {(addr as ShippingAddress & { contact_email?: string }).contact_email && (
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-0.5">Delivery email</p>
+                <a
+                  href={`mailto:${(addr as ShippingAddress & { contact_email?: string }).contact_email}`}
+                  className="hover:underline"
+                >
+                  {(addr as ShippingAddress & { contact_email?: string }).contact_email}
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <Separator />

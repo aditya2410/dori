@@ -28,6 +28,7 @@ export interface ShippingAddress {
   country: string
   full_name: string
   phone: string
+  contact_email?: string
 }
 
 export interface Database {
@@ -61,6 +62,9 @@ export interface Database {
         Row: {
           id: string
           user_id: string
+          full_name: string | null
+          phone: string | null
+          contact_email: string | null
           line1: string
           line2: string | null
           city: string
@@ -73,6 +77,9 @@ export interface Database {
         Insert: {
           id?: string
           user_id: string
+          full_name?: string | null
+          phone?: string | null
+          contact_email?: string | null
           line1: string
           line2?: string | null
           city: string
@@ -85,6 +92,9 @@ export interface Database {
         Update: {
           id?: string
           user_id?: string
+          full_name?: string | null
+          phone?: string | null
+          contact_email?: string | null
           line1?: string
           line2?: string | null
           city?: string

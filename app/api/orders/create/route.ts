@@ -101,8 +101,10 @@ export async function POST(request: NextRequest) {
     state: address.state,
     pincode: address.pincode,
     country: address.country,
-    full_name: profile?.full_name ?? user.email ?? 'Customer',
-    phone: profile?.phone ?? '',
+    // Use address-level contact info first (allows gifting to a different person)
+    full_name: address.full_name ?? profile?.full_name ?? user.email ?? 'Customer',
+    phone: address.phone ?? profile?.phone ?? '',
+    contact_email: address.contact_email ?? user.email ?? undefined,
   }
 
   // ── Create order ─────────────────────────────────────────────

@@ -8,6 +8,9 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 export type AddressState = { error: string } | { success: true } | null
 
 const addressSchema = z.object({
+  full_name: z.string().min(1, 'Full name is required.').max(100),
+  phone: z.string().min(7, 'Enter a valid phone number.').max(20),
+  contact_email: z.string().email('Enter a valid email.').optional().or(z.literal('')),
   line1: z.string().min(1, 'Address line 1 is required.').max(200),
   line2: z.string().max(200).optional(),
   city: z.string().min(1, 'City is required.').max(100),
@@ -20,6 +23,9 @@ export async function addAddress(
   formData: FormData,
 ): Promise<AddressState> {
   const parsed = addressSchema.safeParse({
+    full_name: formData.get('full_name'),
+    phone: formData.get('phone'),
+    contact_email: formData.get('contact_email') || undefined,
     line1: formData.get('line1'),
     line2: formData.get('line2') || undefined,
     city: formData.get('city'),
@@ -42,6 +48,9 @@ export async function addAddress(
 
   const { error } = await service.from('addresses').insert({
     user_id: user.id,
+    full_name: parsed.data.full_name,
+    phone: parsed.data.phone,
+    contact_email: parsed.data.contact_email || null,
     line1: parsed.data.line1,
     line2: parsed.data.line2 ?? null,
     city: parsed.data.city,
