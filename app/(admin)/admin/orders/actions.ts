@@ -29,19 +29,17 @@ export async function markShippedAction(
     .update({ status: 'shipped', tracking_number: tracking })
     .eq('id', orderId)
     .eq('status', 'paid')
-    .select('order_number, user_id')
+    .select('order_number, user_id, shipping_address')
     .single()
 
   if (error || !order) return { error: 'Failed to update order — it may already be shipped.' }
 
   try {
     const { data: authUser } = await service.auth.admin.getUserById(order.user_id)
-    if (authUser.user?.email) {
-      await sendShippingEmail({
-        to: authUser.user.email,
-        orderNumber: order.order_number,
-        trackingNumber: tracking,
-      })
+    const addr = order.shipping_address as unknown as import('@/types/database.types').ShippingAddress
+    const to = addr?.contact_email ?? authUser.user?.email
+    if (to) {
+      await sendShippingEmail({ to, orderNumber: order.order_number, trackingNumber: tracking })
     }
   } catch (err) {
     console.error('[markShipped] email:', err)
@@ -59,17 +57,16 @@ export async function markDelivered(orderId: string): Promise<void> {
     .update({ status: 'delivered' })
     .eq('id', orderId)
     .eq('status', 'shipped')
-    .select('order_number, user_id')
+    .select('order_number, user_id, shipping_address')
     .single()
 
   if (order) {
     try {
       const { data: authUser } = await service.auth.admin.getUserById(order.user_id)
-      if (authUser.user?.email) {
-        await sendDeliveryEmail({
-          to: authUser.user.email,
-          orderNumber: order.order_number,
-        })
+      const addr = order.shipping_address as unknown as import('@/types/database.types').ShippingAddress
+      const to = addr?.contact_email ?? authUser.user?.email
+      if (to) {
+        await sendDeliveryEmail({ to, orderNumber: order.order_number })
       }
     } catch (err) {
       console.error('[markDelivered] email:', err)

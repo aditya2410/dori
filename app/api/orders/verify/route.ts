@@ -89,8 +89,11 @@ export async function POST(request: NextRequest) {
       .select('product_name, quantity, unit_price_paise')
       .eq('order_id', orderId)
 
+    const addr = order.shipping_address as unknown as ShippingAddress
+    const to = addr.contact_email ?? user.email!
+
     await sendOrderConfirmationEmail({
-      to: user.email!,
+      to,
       orderNumber: order.order_number,
       items: (items ?? []).map((i) => ({
         name: i.product_name,
@@ -100,7 +103,7 @@ export async function POST(request: NextRequest) {
       subtotalPaise: order.subtotal_paise,
       shippingPaise: order.shipping_paise,
       totalPaise: order.total_paise,
-      shippingAddress: order.shipping_address as unknown as ShippingAddress,
+      shippingAddress: addr,
     })
   } catch (err) {
     // Email failure must not block the payment success response
