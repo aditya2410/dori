@@ -4,6 +4,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { logout } from '@/app/(auth)/actions'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { AnimatedContent } from '@/components/ui/animated-content'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -57,7 +58,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <main className="flex-1 container py-10">{children}</main>
+      <AnimatedContent className="flex-1">
+        <main className="container py-10">{children}</main>
+      </AnimatedContent>
     </div>
   )
 }

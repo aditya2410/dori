@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { AnimatedContent } from '@/components/ui/animated-content'
 
 // Server Components can be passed as props to Client Components.
 // This lets us conditionally render SiteHeader based on pathname
@@ -20,7 +21,7 @@ export function ShopLayoutClient({
   return (
     <>
       {showHeader && header}
-      {children}
+      <AnimatedContent>{children}</AnimatedContent>
     </>
   )
 }

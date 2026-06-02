@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { AnimatedContent } from '@/components/ui/animated-content'
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,9 +11,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </Link>
         </div>
       </header>
-      <main className="flex-1 flex items-center justify-center py-16 px-4">
+      <AnimatedContent className="flex-1 flex items-center justify-center py-16 px-4">
         {children}
-      </main>
+      </AnimatedContent>
     </div>
   )
 }
