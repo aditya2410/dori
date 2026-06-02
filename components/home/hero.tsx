@@ -1,17 +1,19 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import heroImg from '@/public/images/hero.webp'
 import { heroConfig } from '@/lib/config'
 
 export function Hero() {
   return (
     <section className="relative w-full aspect-[3/4] md:h-[calc(100vh-4rem)] overflow-hidden">
       <Image
-        src={heroConfig.image}
+        src={heroImg}
         alt={heroConfig.headline}
         fill
         sizes="100vw"
         quality={90}
         priority
+        placeholder="blur"
         className="object-cover object-center"
       />
 

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, BLUR_PLACEHOLDER } from '@/lib/utils'
 
 interface ProductCardProps {
   product: {
@@ -24,7 +24,8 @@ export function ProductCard({ product }: ProductCardProps) {
             alt={product.name}
             fill
             sizes="(max-width: 768px) 50vw, 25vw"
-            unoptimized
+            placeholder="blur"
+            blurDataURL={BLUR_PLACEHOLDER}
             className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
           />
         ) : (

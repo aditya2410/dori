@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
+import aboutImg from '@/public/images/aboutus.jpg'
 
 export const metadata: Metadata = {
   title: 'About',
@@ -12,7 +13,8 @@ export default function AboutPage() {
       {/* ── Hero strip ── */}
       <section className="relative w-full h-[60vh] md:h-[80vh] overflow-hidden">
         <Image
-          src="/images/aboutus.jpg"
+          src={aboutImg}
+          placeholder="blur"
           alt="Made in Jaipur"
           fill
           sizes="100vw"

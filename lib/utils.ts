@@ -23,6 +23,12 @@ export function toSlug(str: string): string {
     .replace(/^-|-$/g, '')
 }
 
+// Warm-beige blur placeholder matching --secondary (hsl 40 15% 92% ≈ #ede9e2).
+// Used on product images so there is an immediate tinted background while the
+// real image loads instead of a jarring white/blank flash.
+export const BLUR_PLACEHOLDER =
+  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjUiPjxyZWN0IGZpbGw9IiNlZGU5ZTIiIHdpZHRoPSI0IiBoZWlnaHQ9IjUiLz48L3N2Zz4='
+
 export function generateOrderNumber(): string {
   const timestamp = Date.now().toString(36).toUpperCase()
   const random = Math.random().toString(36).substring(2, 6).toUpperCase()

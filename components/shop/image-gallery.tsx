@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { BLUR_PLACEHOLDER } from '@/lib/utils'
 
 interface ImageGalleryProps {
   images: string[]
@@ -28,13 +29,14 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
           alt={productName}
           fill
           sizes="(max-width: 768px) 100vw, 50vw"
-          unoptimized
+          placeholder="blur"
+          blurDataURL={BLUR_PLACEHOLDER}
           className="object-cover transition-opacity duration-300"
           priority
         />
       </div>
 
-      {/* Thumbnails — only show if more than one image */}
+      {/* Thumbnails */}
       {images.length > 1 && (
         <div className="grid grid-cols-4 gap-2">
           {images.map((url, i) => (
@@ -52,7 +54,8 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
                 alt={`${productName} — view ${i + 1}`}
                 fill
                 sizes="10vw"
-                unoptimized
+                placeholder="blur"
+                blurDataURL={BLUR_PLACEHOLDER}
                 className="object-cover"
               />
             </button>
