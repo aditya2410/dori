@@ -53,7 +53,8 @@ export async function submitContact(
   const supabase = createServiceClient()
 
   // Rate limit: 3 submissions per IP per hour
-  if (ip) {
+  // Set CONTACT_RATE_LIMIT_DISABLED=true in .env.local to bypass during testing
+  if (ip && process.env.CONTACT_RATE_LIMIT_DISABLED !== 'true') {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
     const { count } = await supabase
       .from('contact_messages')
@@ -76,12 +77,23 @@ export async function submitContact(
     return { errors: { _form: 'Something went wrong. Please try again.' } }
   }
 
-  // Notification email — fire-and-forget; never block the user on email failure
+  // Notification email
+  const fromEmail  = process.env.RESEND_FROM_EMAIL
+  const toEmail    = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'hello@dorijaipur.in'
+  const resendKey  = process.env.RESEND_API_KEY
+
+  console.log('[contact] email config →', { from: fromEmail, to: toEmail, hasKey: !!resendKey })
+
+  if (!resendKey || !fromEmail) {
+    console.error('[contact] RESEND_API_KEY or RESEND_FROM_EMAIL is not set — skipping email')
+    return { ok: true }
+  }
+
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY!)
-    await resend.emails.send({
-      from:    process.env.RESEND_FROM_EMAIL!,
-      to:      process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'hello@dorijaipur.in',
+    const resend = new Resend(resendKey)
+    const result = await resend.emails.send({
+      from:    fromEmail,
+      to:      toEmail,
       replyTo: parsed.data.email,
       subject: `New contact message from ${parsed.data.name}`,
       html: `
@@ -93,6 +105,7 @@ export async function submitContact(
         <p>${escapeHtml(parsed.data.message).replace(/\n/g, '<br>')}</p>
       `,
     })
+    console.log('[contact] email result →', result)
   } catch (e) {
     console.error('[contact] email error:', e)
   }
