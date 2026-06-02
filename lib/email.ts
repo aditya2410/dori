@@ -192,8 +192,6 @@ export async function sendShippingEmail(data: {
   orderNumber: string
   trackingNumber: string
 }) {
-  const dtdcUrl = `https://www.dtdc.in/trace.asp?Rno=${encodeURIComponent(data.trackingNumber)}`
-
   const html = layout(`
     ${heading('Your order has shipped')}
     ${bodyText(`Your order <strong>${data.orderNumber}</strong> is on its way via <strong>DTDC</strong>.`)}
@@ -201,17 +199,15 @@ export async function sendShippingEmail(data: {
     ${divider()}
 
     <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#999;">Tracking number</p>
-    <p style="margin:0 0 20px;font-size:20px;font-weight:600;color:#1a1a1a;letter-spacing:0.06em;">${data.trackingNumber}</p>
-    <a href="${dtdcUrl}" style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;padding:12px 24px;">
-      Track on DTDC →
-    </a>
+    <p style="margin:0 0 16px;font-size:22px;font-weight:600;color:#1a1a1a;letter-spacing:0.06em;">${data.trackingNumber}</p>
+    ${bodyText('To track your shipment, visit <a href="https://www.dtdc.in" style="color:#1a1a1a;">dtdc.in</a> and enter the tracking number above.')}
 
     ${divider()}
 
     ${bodyText('Your order will be delivered in 3–5 business days. Thank you for choosing DORI.')}
   `)
 
-  const text = `Your order ${data.orderNumber} has shipped via DTDC.\n\nTracking number: ${data.trackingNumber}\n\nTrack your order: ${dtdcUrl}\n\n— DORI`
+  const text = `Your order ${data.orderNumber} has shipped via DTDC.\n\nTracking number: ${data.trackingNumber}\n\nTo track your shipment, visit dtdc.in and enter the tracking number above.\n\n— DORI`
 
   await resend.emails.send({
     from: FROM,
