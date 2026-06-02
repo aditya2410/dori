@@ -167,10 +167,6 @@ export async function sendDeliveryEmail(data: { to: string; orderNumber: string 
 
     ${divider()}
 
-    ${bodyText('If you have any questions or concerns, simply reply to this email and we\'ll be happy to help.')}
-
-    ${divider()}
-
     ${bodyText('Thank you for choosing DORI. We\'d love to see how you\'re styling your new piece — tag us on Instagram.')}
   `)
 
