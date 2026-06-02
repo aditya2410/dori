@@ -56,7 +56,8 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
   const [nameValue, setNameValue] = useState(product?.name ?? '')
   const [slugValue, setSlugValue] = useState(product?.slug ?? '')
   const [slugTouched, setSlugTouched] = useState(isEdit)
-  const [seriesId, setSeriesId] = useState<string>(currentSeriesId ?? '')
+  const NONE = '__none__'
+  const [seriesId, setSeriesId] = useState<string>(currentSeriesId ?? NONE)
   const [isBestseller, setIsBestseller] = useState(product?.is_bestseller ?? false)
 
   type FormAction = (prev: ProductState, formData: FormData) => Promise<ProductState>
@@ -74,7 +75,8 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
   return (
     <form action={formAction} className="space-y-8 max-w-2xl">
       <input type="hidden" name="images" value={JSON.stringify(imageUrls)} />
-      <input type="hidden" name="series_id" value={seriesId} />
+      {/* Convert sentinel back to empty string so the action receives '' for "no series" */}
+      <input type="hidden" name="series_id" value={seriesId === NONE ? '' : seriesId} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-1.5">
@@ -152,7 +154,7 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
               <SelectValue placeholder="None — not part of a series" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value={NONE}>None</SelectItem>
               {activeSeries.map((s) => (
                 <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
               ))}
