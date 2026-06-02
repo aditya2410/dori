@@ -69,6 +69,53 @@ export async function addAddress(
   return { success: true }
 }
 
+export async function updateAddress(
+  addressId: string,
+  _prev: AddressState,
+  formData: FormData,
+): Promise<AddressState> {
+  const parsed = addressSchema.safeParse({
+    full_name: formData.get('full_name'),
+    phone: formData.get('phone'),
+    contact_email: formData.get('contact_email') || undefined,
+    line1: formData.get('line1'),
+    line2: formData.get('line2') || undefined,
+    city: formData.get('city'),
+    state: formData.get('state'),
+    pincode: formData.get('pincode'),
+  })
+  if (!parsed.success) return { error: parsed.error.errors[0].message }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const service = createServiceClient()
+  const { error } = await service
+    .from('addresses')
+    .update({
+      full_name: parsed.data.full_name,
+      phone: parsed.data.phone,
+      contact_email: parsed.data.contact_email || null,
+      line1: parsed.data.line1,
+      line2: parsed.data.line2 ?? null,
+      city: parsed.data.city,
+      state: parsed.data.state,
+      pincode: parsed.data.pincode,
+    })
+    .eq('id', addressId)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('[updateAddress]', error)
+    return { error: 'Failed to update address.' }
+  }
+
+  revalidatePath('/account/addresses')
+  revalidatePath('/checkout')
+  return { success: true }
+}
+
 export async function deleteAddress(addressId: string): Promise<void> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

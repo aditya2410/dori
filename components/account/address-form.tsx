@@ -8,9 +8,23 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 
+interface ExistingAddress {
+  full_name: string | null
+  phone: string | null
+  contact_email: string | null
+  line1: string
+  line2: string | null
+  city: string
+  state: string
+  pincode: string
+}
+
 interface AddressFormProps {
   onSuccess?: () => void
+  onCancel?: () => void
   submitLabel?: string
+  address?: ExistingAddress
+  formAction?: (prev: AddressState, formData: FormData) => Promise<AddressState>
 }
 
 function SaveButton({ label }: { label: string }) {
@@ -22,41 +36,74 @@ function SaveButton({ label }: { label: string }) {
   )
 }
 
-export function AddressForm({ onSuccess, submitLabel = 'Save address' }: AddressFormProps) {
-  const [state, formAction] = useActionState<AddressState, FormData>(addAddress, null)
+export function AddressForm({
+  onSuccess,
+  onCancel,
+  submitLabel = 'Save address',
+  address,
+  formAction,
+}: AddressFormProps) {
+  const action = formAction ?? addAddress
+  const [state, boundAction] = useActionState<AddressState, FormData>(action, null)
 
   useEffect(() => {
     if (state && 'success' in state) onSuccess?.()
   }, [state, onSuccess])
 
   return (
-    <form action={formAction} className="space-y-4">
-      {/* Contact info — filled for the recipient (may differ from account holder) */}
+    <form action={boundAction} className="space-y-4">
       <div className="space-y-1.5">
         <Label htmlFor="full_name">Full name</Label>
-        <Input id="full_name" name="full_name" autoComplete="name" placeholder="Priya Sharma" required />
+        <Input
+          id="full_name"
+          name="full_name"
+          autoComplete="name"
+          placeholder="Priya Sharma"
+          defaultValue={address?.full_name ?? ''}
+          required
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="phone">Phone number</Label>
-          <Input id="phone" name="phone" type="tel" autoComplete="tel" placeholder="+91 98765 43210" required />
+          <Input
+            id="phone"
+            name="phone"
+            type="tel"
+            autoComplete="tel"
+            placeholder="+91 98765 43210"
+            defaultValue={address?.phone ?? ''}
+            required
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="contact_email">
             Email{' '}
             <span className="text-muted-foreground font-normal normal-case tracking-normal">(optional)</span>
           </Label>
-          <Input id="contact_email" name="contact_email" type="email" autoComplete="email" placeholder="priya@example.com" />
+          <Input
+            id="contact_email"
+            name="contact_email"
+            type="email"
+            autoComplete="email"
+            placeholder="priya@example.com"
+            defaultValue={address?.contact_email ?? ''}
+          />
         </div>
       </div>
 
       <Separator />
 
-      {/* Delivery address */}
       <div className="space-y-1.5">
         <Label htmlFor="line1">Address line 1</Label>
-        <Input id="line1" name="line1" placeholder="Building, street" required />
+        <Input
+          id="line1"
+          name="line1"
+          placeholder="Building, street"
+          defaultValue={address?.line1 ?? ''}
+          required
+        />
       </div>
 
       <div className="space-y-1.5">
@@ -64,30 +111,61 @@ export function AddressForm({ onSuccess, submitLabel = 'Save address' }: Address
           Line 2{' '}
           <span className="text-muted-foreground font-normal normal-case tracking-normal">(optional)</span>
         </Label>
-        <Input id="line2" name="line2" placeholder="Apartment, floor, landmark" />
+        <Input
+          id="line2"
+          name="line2"
+          placeholder="Apartment, floor, landmark"
+          defaultValue={address?.line2 ?? ''}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="city">City</Label>
-          <Input id="city" name="city" placeholder="Mumbai" required />
+          <Input
+            id="city"
+            name="city"
+            placeholder="Mumbai"
+            defaultValue={address?.city ?? ''}
+            required
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="state">State</Label>
-          <Input id="state" name="state" placeholder="Maharashtra" required />
+          <Input
+            id="state"
+            name="state"
+            placeholder="Maharashtra"
+            defaultValue={address?.state ?? ''}
+            required
+          />
         </div>
       </div>
 
       <div className="space-y-1.5 max-w-[160px]">
         <Label htmlFor="pincode">Pincode</Label>
-        <Input id="pincode" name="pincode" placeholder="400001" maxLength={6} required />
+        <Input
+          id="pincode"
+          name="pincode"
+          placeholder="400001"
+          maxLength={6}
+          defaultValue={address?.pincode ?? ''}
+          required
+        />
       </div>
 
       {state && 'error' in state && (
         <p className="text-sm text-destructive">{state.error}</p>
       )}
 
-      <SaveButton label={submitLabel} />
+      <div className="flex items-center gap-3">
+        <SaveButton label={submitLabel} />
+        {onCancel && (
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+      </div>
     </form>
   )
 }

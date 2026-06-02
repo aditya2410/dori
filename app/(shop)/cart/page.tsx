@@ -145,7 +145,7 @@ export default function CartPage() {
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">
-            ₹150 flat shipping · Delivered in 3–5 days
+            ₹150 flat shipping · Shipped in 3–5 days
           </p>
         </div>
       </div>
