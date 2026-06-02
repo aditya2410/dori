@@ -7,6 +7,8 @@ import { createServiceClient } from '@/lib/supabase/server'
 
 export type SeriesState = { error: string } | null
 
+const VALID_POSITIONS = ['top', 'center', 'bottom', 'left', 'right'] as const
+
 const seriesSchema = z.object({
   name: z.string().min(1, 'Name is required.').max(200),
   slug: z
@@ -16,6 +18,7 @@ const seriesSchema = z.object({
   description: z.string().max(2000).optional(),
   display_order: z.coerce.number({ invalid_type_error: 'Display order must be a number.' }).int().min(0),
   cover_image_url: z.string().max(500).optional(),
+  image_position: z.enum(VALID_POSITIONS).default('center'),
 })
 
 export async function createSeries(
@@ -28,6 +31,7 @@ export async function createSeries(
     description: formData.get('description') || undefined,
     display_order: formData.get('display_order'),
     cover_image_url: formData.get('cover_image_url') || undefined,
+    image_position: formData.get('image_position') || 'center',
   })
   if (!parsed.success) return { error: parsed.error.errors[0].message }
 
@@ -38,6 +42,7 @@ export async function createSeries(
     display_order: parsed.data.display_order,
     is_active: formData.get('is_active') === 'on',
     cover_image_url: parsed.data.cover_image_url ?? null,
+    image_position: parsed.data.image_position,
   })
 
   if (error) {
@@ -61,6 +66,7 @@ export async function updateSeries(
     description: formData.get('description') || undefined,
     display_order: formData.get('display_order'),
     cover_image_url: formData.get('cover_image_url') || undefined,
+    image_position: formData.get('image_position') || 'center',
   })
   if (!parsed.success) return { error: parsed.error.errors[0].message }
 

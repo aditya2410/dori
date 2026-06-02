@@ -145,6 +145,7 @@ export interface Database {
           name: string
           description: string | null
           cover_image_url: string | null
+          image_position: 'top' | 'center' | 'bottom' | 'left' | 'right'
           display_order: number
           is_active: boolean
           created_at: string
@@ -156,6 +157,7 @@ export interface Database {
           name: string
           description?: string | null
           cover_image_url?: string | null
+          image_position?: 'top' | 'center' | 'bottom' | 'left' | 'right'
           display_order?: number
           is_active?: boolean
           created_at?: string
@@ -167,6 +169,7 @@ export interface Database {
           name?: string
           description?: string | null
           cover_image_url?: string | null
+          image_position?: 'top' | 'center' | 'bottom' | 'left' | 'right'
           display_order?: number
           is_active?: boolean
           created_at?: string

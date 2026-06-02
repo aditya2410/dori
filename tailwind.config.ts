@@ -7,6 +7,10 @@ const config: Config = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
   ],
+  // Dynamically built from DB value — must be safelisted to avoid purge
+  safelist: [
+    'object-top', 'object-center', 'object-bottom', 'object-left', 'object-right',
+  ],
   theme: {
     container: {
       center: true,

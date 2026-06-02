@@ -48,7 +48,7 @@ export default async function CollectionDetailPage({
 
   const { data: series } = await supabase
     .from('series')
-    .select('id, name, description, cover_image_url')
+    .select('id, name, description, cover_image_url, image_position')
     .eq('slug', slug)
     .eq('is_active', true)
     .single()
@@ -88,7 +88,7 @@ export default async function CollectionDetailPage({
               priority
               placeholder="blur"
               blurDataURL={BLUR_PLACEHOLDER}
-              className="object-cover object-center"
+              className={`object-cover object-${series.image_position ?? 'center'}`}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
           </>

@@ -11,8 +11,19 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ImageUploader } from './image-uploader'
 import { toSlug } from '@/lib/utils'
+
+type ImagePosition = 'top' | 'center' | 'bottom' | 'left' | 'right'
+
+const POSITION_OPTIONS: { value: ImagePosition; label: string; hint: string }[] = [
+  { value: 'top',    label: 'Top',    hint: 'Keeps the top of the image — best for portraits or products with detail at top' },
+  { value: 'center', label: 'Center', hint: 'Default — shows the middle of the image' },
+  { value: 'bottom', label: 'Bottom', hint: 'Keeps the bottom — best for flat-lay or ground-level shots' },
+  { value: 'left',   label: 'Left',   hint: 'Keeps the left side of the image' },
+  { value: 'right',  label: 'Right',  hint: 'Keeps the right side of the image' },
+]
 
 interface Series {
   id: string
@@ -20,6 +31,7 @@ interface Series {
   slug: string
   description: string | null
   cover_image_url: string | null
+  image_position: ImagePosition
   display_order: number
   is_active: boolean
 }
@@ -45,6 +57,7 @@ export function SeriesForm({ series }: SeriesFormProps) {
   const [nameValue, setNameValue] = useState(series?.name ?? '')
   const [slugValue, setSlugValue] = useState(series?.slug ?? '')
   const [slugTouched, setSlugTouched] = useState(isEdit)
+  const [position, setPosition] = useState<ImagePosition>(series?.image_position ?? 'center')
 
   type FormAction = (prev: SeriesState, formData: FormData) => Promise<SeriesState>
   const action: FormAction = isEdit
@@ -132,6 +145,27 @@ export function SeriesForm({ series }: SeriesFormProps) {
         <Label>Cover image</Label>
         <ImageUploader existingImages={coverImages} onChange={setCoverImages} />
         <p className="text-xs text-muted-foreground">Used as hero image on the collection page. Only the first image is used.</p>
+      </div>
+
+      {/* Image position — controls which part of the image is visible when cropped */}
+      <div className="space-y-2">
+        <input type="hidden" name="image_position" value={position} />
+        <Label>Image focal point</Label>
+        <Select value={position} onValueChange={(v) => setPosition(v as ImagePosition)}>
+          <SelectTrigger className="max-w-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {POSITION_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          {POSITION_OPTIONS.find((o) => o.value === position)?.hint}
+        </p>
       </div>
 
       {state && 'error' in state && (
