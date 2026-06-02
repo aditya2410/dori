@@ -2,7 +2,7 @@
 
 import { useActionState, useOptimistic, useTransition, useState } from 'react'
 import { useFormStatus } from 'react-dom'
-import { Loader2 } from 'lucide-react'
+import { Loader2, CheckCircle2 } from 'lucide-react'
 import {
   markShippedAction,
   markDelivered,
@@ -32,6 +32,15 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
   const [shipState, shipAction] = useActionState<ShipState, FormData>(boundShip, null)
 
   if (optimisticStatus === 'cancelled' || optimisticStatus === 'refunded') return null
+
+  if (optimisticStatus === 'delivered') {
+    return (
+      <div className="border p-5 flex items-center gap-2 text-sm text-green-700">
+        <CheckCircle2 className="size-4 shrink-0" />
+        Order marked as delivered
+      </div>
+    )
+  }
 
   const canShip    = optimisticStatus === 'paid'
   const canDeliver = optimisticStatus === 'shipped'
