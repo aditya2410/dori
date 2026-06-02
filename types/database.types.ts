@@ -241,6 +241,7 @@ export interface Database {
           user_id: string
           order_number: string
           status: OrderStatus
+          settled: boolean
           subtotal_paise: number
           shipping_paise: number
           total_paise: number
@@ -257,6 +258,7 @@ export interface Database {
           user_id: string
           order_number: string
           status?: OrderStatus
+          settled?: boolean
           subtotal_paise: number
           shipping_paise?: number
           total_paise: number
@@ -273,6 +275,7 @@ export interface Database {
           user_id?: string
           order_number?: string
           status?: OrderStatus
+          settled?: boolean
           subtotal_paise?: number
           shipping_paise?: number
           total_paise?: number

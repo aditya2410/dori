@@ -5,18 +5,19 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { formatPrice } from '@/lib/utils'
 import { QuickOrderAction } from '@/components/admin/quick-order-action'
+import { ClearHistoryButton } from '@/components/admin/clear-history-button'
 import type { OrderStatus, ShippingAddress } from '@/types/database.types'
 
 export const metadata: Metadata = { title: 'Orders — Admin' }
 
 const FILTERS = [
-  { label: 'All',               value: '' },
-  { label: 'Awaiting Payment',  value: 'created' },
-  { label: 'Paid',              value: 'paid' },
-  { label: 'Shipped',           value: 'shipped' },
-  { label: 'Delivered',         value: 'delivered' },
-  { label: 'Cancelled',         value: 'cancelled' },
-  { label: 'Refunded',          value: 'refunded' },
+  { label: 'All',              value: '' },
+  { label: 'Awaiting Payment', value: 'created' },
+  { label: 'Paid',             value: 'paid' },
+  { label: 'Shipped',          value: 'shipped' },
+  { label: 'Delivered',        value: 'delivered' },
+  { label: 'Cancelled',        value: 'cancelled' },
+  { label: 'Refunded',         value: 'refunded' },
 ]
 
 const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'success' | 'destructive' | 'outline'> = {
@@ -37,53 +38,102 @@ const statusLabel: Record<OrderStatus, string> = {
   refunded:  'Refunded',
 }
 
+const CLEARABLE_STATUSES: OrderStatus[] = ['delivered', 'cancelled', 'refunded']
+
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>
+  searchParams: Promise<{ status?: string; history?: string }>
 }) {
-  const { status } = await searchParams
+  const { status, history } = await searchParams
+  const showHistory = history === '1'
   const supabase = createServiceClient()
 
   let query = supabase
     .from('orders')
     .select('id, order_number, status, total_paise, created_at, shipping_address')
+    .eq('settled', showHistory)
     .order('created_at', { ascending: false })
 
   if (status) query = query.eq('status', status as OrderStatus)
 
   const { data: orders } = await query
 
+  // Count clearable (terminal, unsettled) orders for the button — only needed on the active view
+  let clearableCount = 0
+  if (!showHistory) {
+    const { count } = await supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('settled', false)
+      .in('status', CLEARABLE_STATUSES)
+    clearableCount = count ?? 0
+  }
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-serif text-3xl font-normal">Orders</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          When an order is <strong>Paid</strong>, mark it shipped (enter a tracking number), then mark it delivered once it arrives.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl font-normal">
+            {showHistory ? 'Cleared Orders' : 'Orders'}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {showHistory ? (
+              <Link href="/admin/orders" className="hover:underline underline-offset-4">
+                ← Back to active orders
+              </Link>
+            ) : (
+              <>
+                When an order is <strong>Paid</strong>, mark it shipped, then mark it delivered once it arrives.
+              </>
+            )}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 pt-1">
+          {!showHistory && clearableCount > 0 && (
+            <ClearHistoryButton count={clearableCount} />
+          )}
+          {!showHistory && (
+            <Link
+              href="/admin/orders?history=1"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
+            >
+              View history
+            </Link>
+          )}
+        </div>
       </div>
 
       <Separator />
 
       {/* Status filter tabs */}
       <div className="flex items-center gap-1 flex-wrap">
-        {FILTERS.map((f) => (
-          <Link
-            key={f.value}
-            href={f.value ? `/admin/orders?status=${f.value}` : '/admin/orders'}
-            className={`px-3 py-1.5 text-xs uppercase tracking-wider border transition-colors ${
-              (status ?? '') === f.value
-                ? 'bg-foreground text-background border-foreground'
-                : 'text-muted-foreground border-border hover:border-foreground/50'
-            }`}
-          >
-            {f.label}
-          </Link>
-        ))}
+        {FILTERS.map((f) => {
+          const href = new URLSearchParams({
+            ...(f.value ? { status: f.value } : {}),
+            ...(showHistory ? { history: '1' } : {}),
+          }).toString()
+          return (
+            <Link
+              key={f.value}
+              href={href ? `/admin/orders?${href}` : '/admin/orders'}
+              className={`px-3 py-1.5 text-xs uppercase tracking-wider border transition-colors ${
+                (status ?? '') === f.value
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'text-muted-foreground border-border hover:border-foreground/50'
+              }`}
+            >
+              {f.label}
+            </Link>
+          )
+        })}
       </div>
 
       {!orders?.length ? (
-        <p className="text-muted-foreground text-sm py-8">No orders found.</p>
+        <p className="text-muted-foreground text-sm py-8">
+          {showHistory ? 'No cleared orders.' : 'No active orders.'}
+        </p>
       ) : (
         <div className="border">
           <table className="w-full text-sm">
@@ -130,7 +180,7 @@ export default async function AdminOrdersPage({
                       {formatPrice(order.total_paise)}
                     </td>
                     <td className="p-4">
-                      <QuickOrderAction orderId={order.id} status={order.status} />
+                      {!showHistory && <QuickOrderAction orderId={order.id} status={order.status} />}
                     </td>
                   </tr>
                 )

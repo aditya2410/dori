@@ -83,6 +83,16 @@ export async function cancelOrder(orderId: string): Promise<void> {
   revalidate(orderId)
 }
 
+export async function settleAllOrders(): Promise<void> {
+  const service = createServiceClient()
+  await service
+    .from('orders')
+    .update({ settled: true })
+    .in('status', ['delivered', 'cancelled', 'refunded'])
+    .eq('settled', false)
+  revalidatePath('/admin/orders')
+}
+
 export async function refundOrder(
   orderId: string,
   _prev: RefundState,
