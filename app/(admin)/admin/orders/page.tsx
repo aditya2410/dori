@@ -59,15 +59,19 @@ export default async function AdminOrdersPage({
 
   const { data: orders } = await query
 
-  // Count clearable (terminal, unsettled) orders for the button — only needed on the active view
+  // Count clearable and still-active orders — only needed on the active view
   let clearableCount = 0
+  let paidCount = 0
+  let shippedCount = 0
   if (!showHistory) {
-    const { count } = await supabase
-      .from('orders')
-      .select('id', { count: 'exact', head: true })
-      .eq('settled', false)
-      .in('status', CLEARABLE_STATUSES)
-    clearableCount = count ?? 0
+    const [{ count: clearable }, { count: paid }, { count: shipped }] = await Promise.all([
+      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('settled', false).in('status', CLEARABLE_STATUSES),
+      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('settled', false).eq('status', 'paid'),
+      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('settled', false).eq('status', 'shipped'),
+    ])
+    clearableCount = clearable ?? 0
+    paidCount = paid ?? 0
+    shippedCount = shipped ?? 0
   }
 
   return (
@@ -92,7 +96,7 @@ export default async function AdminOrdersPage({
 
         <div className="flex items-center gap-2 shrink-0 pt-1">
           {!showHistory && clearableCount > 0 && (
-            <ClearHistoryButton count={clearableCount} />
+            <ClearHistoryButton count={clearableCount} paidCount={paidCount} shippedCount={shippedCount} />
           )}
           {!showHistory && (
             <Link

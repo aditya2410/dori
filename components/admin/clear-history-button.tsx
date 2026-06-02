@@ -5,16 +5,26 @@ import { Loader2 } from 'lucide-react'
 import { settleAllOrders } from '@/app/(admin)/admin/orders/actions'
 import { Button } from '@/components/ui/button'
 
-export function ClearHistoryButton({ count }: { count: number }) {
+interface ClearHistoryButtonProps {
+  count: number
+  paidCount: number
+  shippedCount: number
+}
+
+export function ClearHistoryButton({ count, paidCount, shippedCount }: ClearHistoryButtonProps) {
   const [isPending, startTransition] = useTransition()
 
   function handleClick() {
-    if (
-      !window.confirm(
-        `Mark ${count} completed order${count === 1 ? '' : 's'} as cleared? They will be hidden from this view.`,
-      )
-    )
-      return
+    const warnings: string[] = []
+    if (paidCount > 0) warnings.push(`${paidCount} paid order${paidCount === 1 ? '' : 's'} still need${paidCount === 1 ? 's' : ''} to be shipped`)
+    if (shippedCount > 0) warnings.push(`${shippedCount} shipped order${shippedCount === 1 ? '' : 's'} still need${shippedCount === 1 ? 's' : ''} to be marked delivered`)
+
+    let message = `Mark ${count} completed order${count === 1 ? '' : 's'} as cleared? They will be hidden from this view.`
+    if (warnings.length > 0) {
+      message += `\n\n⚠️ Note: ${warnings.join(' and ')}.`
+    }
+
+    if (!window.confirm(message)) return
     startTransition(async () => {
       await settleAllOrders()
     })
