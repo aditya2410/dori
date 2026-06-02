@@ -44,7 +44,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
   const { pending } = useFormStatus()
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? 'Saving…' : isEdit ? 'Update series' : 'Create series'}
+      {pending ? 'Saving…' : isEdit ? 'Update collection' : 'Create collection'}
     </Button>
   )
 }
@@ -78,7 +78,7 @@ export function SeriesForm({ series }: SeriesFormProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-1.5">
-          <Label htmlFor="name">Series name</Label>
+          <Label htmlFor="name">Collection name</Label>
           <Input
             id="name"
             name="name"
@@ -137,7 +137,7 @@ export function SeriesForm({ series }: SeriesFormProps) {
           className="h-4 w-4 accent-foreground"
         />
         <Label htmlFor="is_active" className="normal-case text-sm font-normal tracking-normal">
-          Active — visible in navigation and collections page
+          Visible — shown in navigation and collections page
         </Label>
       </div>
 

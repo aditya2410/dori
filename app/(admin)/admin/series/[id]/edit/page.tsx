@@ -6,7 +6,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { SeriesForm } from '@/components/admin/series-form'
 
-export const metadata: Metadata = { title: 'Edit Series — Admin' }
+export const metadata: Metadata = { title: 'Edit Collection — Admin' }
 
 export default async function EditSeriesPage({
   params,
@@ -28,10 +28,10 @@ export default async function EditSeriesPage({
         <Button variant="ghost" size="sm" className="pl-0 text-muted-foreground" asChild>
           <Link href="/admin/series">
             <ChevronLeft className="size-4" />
-            Series
+            Collections
           </Link>
         </Button>
-        <h1 className="font-serif text-3xl font-normal">Edit series</h1>
+        <h1 className="font-serif text-3xl font-normal">Edit collection</h1>
       </div>
       <SeriesForm series={series} />
     </div>
