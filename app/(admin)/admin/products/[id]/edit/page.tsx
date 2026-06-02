@@ -15,13 +15,30 @@ export default async function EditProductPage({
   const { id } = await params
   const supabase = createServiceClient()
 
-  const { data: product } = await supabase
-    .from('products')
-    .select('id, name, slug, description, price_paise, stock, is_active, images')
-    .eq('id', id)
-    .single()
+  const [
+    { data: product },
+    { data: activeSeries },
+    { data: productSeriesData },
+  ] = await Promise.all([
+    supabase
+      .from('products')
+      .select('id, name, slug, description, price_paise, stock, is_active, is_bestseller, bestseller_order, images')
+      .eq('id', id)
+      .single(),
+    supabase
+      .from('series')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('display_order'),
+    supabase
+      .from('product_series')
+      .select('series_id')
+      .eq('product_id', id),
+  ])
 
   if (!product) notFound()
+
+  const currentSeriesId = productSeriesData?.[0]?.series_id ?? null
 
   return (
     <div className="space-y-8">
@@ -35,7 +52,11 @@ export default async function EditProductPage({
         <h1 className="font-serif text-3xl font-normal">Edit product</h1>
       </div>
 
-      <ProductForm product={product} />
+      <ProductForm
+        product={product}
+        activeSeries={activeSeries ?? []}
+        currentSeriesId={currentSeriesId}
+      />
     </div>
   )
 }

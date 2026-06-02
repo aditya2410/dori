@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ImageUploader } from './image-uploader'
 import { toSlug } from '@/lib/utils'
 
@@ -22,11 +23,20 @@ interface Product {
   price_paise: number
   stock: number
   is_active: boolean
+  is_bestseller: boolean
+  bestseller_order: number | null
   images: unknown
+}
+
+interface SeriesOption {
+  id: string
+  name: string
 }
 
 interface ProductFormProps {
   product?: Product
+  activeSeries?: SeriesOption[]
+  currentSeriesId?: string | null
 }
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
@@ -38,7 +48,7 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
   )
 }
 
-export function ProductForm({ product }: ProductFormProps) {
+export function ProductForm({ product, activeSeries = [], currentSeriesId = null }: ProductFormProps) {
   const isEdit = !!product
   const [imageUrls, setImageUrls] = useState<string[]>(
     Array.isArray(product?.images) ? (product.images as string[]) : [],
@@ -46,8 +56,9 @@ export function ProductForm({ product }: ProductFormProps) {
   const [nameValue, setNameValue] = useState(product?.name ?? '')
   const [slugValue, setSlugValue] = useState(product?.slug ?? '')
   const [slugTouched, setSlugTouched] = useState(isEdit)
+  const [seriesId, setSeriesId] = useState<string>(currentSeriesId ?? '')
+  const [isBestseller, setIsBestseller] = useState(product?.is_bestseller ?? false)
 
-  // When editing, bind the product id as the first arg
   type FormAction = (prev: ProductState, formData: FormData) => Promise<ProductState>
   const action: FormAction = isEdit
     ? (updateProduct.bind(null, product.id) as FormAction)
@@ -62,8 +73,8 @@ export function ProductForm({ product }: ProductFormProps) {
 
   return (
     <form action={formAction} className="space-y-8 max-w-2xl">
-      {/* Images are managed in state and injected via a hidden input */}
       <input type="hidden" name="images" value={JSON.stringify(imageUrls)} />
+      <input type="hidden" name="series_id" value={seriesId} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-1.5">
@@ -73,7 +84,7 @@ export function ProductForm({ product }: ProductFormProps) {
             name="name"
             value={nameValue}
             onChange={handleNameChange}
-            placeholder="Hand-stitched Leather Journal"
+            placeholder="White Pearl Bag"
             required
           />
         </div>
@@ -84,11 +95,8 @@ export function ProductForm({ product }: ProductFormProps) {
             id="slug"
             name="slug"
             value={slugValue}
-            onChange={(e) => {
-              setSlugTouched(true)
-              setSlugValue(e.target.value)
-            }}
-            placeholder="hand-stitched-leather-journal"
+            onChange={(e) => { setSlugTouched(true); setSlugValue(e.target.value) }}
+            placeholder="white-pearl-bag"
             required
           />
           <p className="text-xs text-muted-foreground">/products/{slugValue || '…'}</p>
@@ -133,6 +141,57 @@ export function ProductForm({ product }: ProductFormProps) {
             required
           />
         </div>
+      </div>
+
+      {/* Series */}
+      {activeSeries.length > 0 && (
+        <div className="space-y-1.5">
+          <Label>Series</Label>
+          <Select value={seriesId} onValueChange={setSeriesId}>
+            <SelectTrigger>
+              <SelectValue placeholder="None — not part of a series" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">None</SelectItem>
+              {activeSeries.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Bestseller */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <input
+            id="is_bestseller"
+            name="is_bestseller"
+            type="checkbox"
+            checked={isBestseller}
+            onChange={(e) => setIsBestseller(e.target.checked)}
+            className="h-4 w-4 accent-foreground"
+          />
+          <Label htmlFor="is_bestseller" className="normal-case text-sm font-normal tracking-normal">
+            Best seller — shown on home page
+          </Label>
+        </div>
+
+        {isBestseller && (
+          <div className="space-y-1.5 max-w-[160px] pl-7">
+            <Label htmlFor="bestseller_order">Display order</Label>
+            <Input
+              id="bestseller_order"
+              name="bestseller_order"
+              type="number"
+              min="1"
+              step="1"
+              defaultValue={product?.bestseller_order ?? ''}
+              placeholder="1"
+            />
+            <p className="text-xs text-muted-foreground">Lower = shown first</p>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-3">

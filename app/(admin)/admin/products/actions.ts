@@ -33,6 +33,19 @@ function parseImages(raw: string): string[] {
   }
 }
 
+async function syncProductSeries(
+  supabase: ReturnType<typeof createServiceClient>,
+  productId: string,
+  seriesId: string | null,
+) {
+  // Delete existing series assignment for this product
+  await supabase.from('product_series').delete().eq('product_id', productId)
+  // Insert new one if a series was selected
+  if (seriesId) {
+    await supabase.from('product_series').insert({ product_id: productId, series_id: seriesId })
+  }
+}
+
 export async function createProduct(
   _prev: ProductState,
   formData: FormData,
@@ -44,20 +57,32 @@ export async function createProduct(
     price: formData.get('price'),
     stock: formData.get('stock'),
     images: formData.get('images') ?? '[]',
+    bestseller_order: formData.get('bestseller_order') || '',
   })
 
   if (!parsed.success) return { error: parsed.error.errors[0].message }
 
+  const isBestseller = formData.get('is_bestseller') === 'on'
+  const seriesId = (formData.get('series_id') as string) || null
   const supabase = createServiceClient()
-  const { error } = await supabase.from('products').insert({
-    name: parsed.data.name,
-    slug: parsed.data.slug,
-    description: parsed.data.description ?? null,
-    price_paise: Math.round(parsed.data.price * 100),
-    stock: parsed.data.stock,
-    is_active: formData.get('is_active') === 'on',
-    images: parseImages(parsed.data.images),
-  })
+
+  const { data: product, error } = await supabase
+    .from('products')
+    .insert({
+      name: parsed.data.name,
+      slug: parsed.data.slug,
+      description: parsed.data.description ?? null,
+      price_paise: Math.round(parsed.data.price * 100),
+      stock: parsed.data.stock,
+      is_active: formData.get('is_active') === 'on',
+      images: parseImages(parsed.data.images),
+      is_bestseller: isBestseller,
+        bestseller_order: isBestseller
+        ? (parseInt(formData.get('bestseller_order') as string, 10) || null)
+        : null,
+    })
+    .select('id')
+    .single()
 
   if (error) {
     if (error.code === '23505') return { error: 'A product with this slug already exists.' }
@@ -65,8 +90,11 @@ export async function createProduct(
     return { error: `Failed to create product: ${error.message}` }
   }
 
+  await syncProductSeries(supabase, product.id, seriesId)
+
   revalidatePath('/admin/products')
   revalidatePath('/products')
+  revalidatePath('/')
   redirect('/admin/products')
 }
 
@@ -82,11 +110,15 @@ export async function updateProduct(
     price: formData.get('price'),
     stock: formData.get('stock'),
     images: formData.get('images') ?? '[]',
+    bestseller_order: formData.get('bestseller_order') || '',
   })
 
   if (!parsed.success) return { error: parsed.error.errors[0].message }
 
+  const isBestseller = formData.get('is_bestseller') === 'on'
+  const seriesId = (formData.get('series_id') as string) || null
   const supabase = createServiceClient()
+
   const { error } = await supabase
     .from('products')
     .update({
@@ -97,6 +129,10 @@ export async function updateProduct(
       stock: parsed.data.stock,
       is_active: formData.get('is_active') === 'on',
       images: parseImages(parsed.data.images),
+      is_bestseller: isBestseller,
+        bestseller_order: isBestseller
+        ? (parseInt(formData.get('bestseller_order') as string, 10) || null)
+        : null,
     })
     .eq('id', productId)
 
@@ -106,9 +142,12 @@ export async function updateProduct(
     return { error: 'Failed to update product. Please try again.' }
   }
 
+  await syncProductSeries(supabase, productId, seriesId)
+
   revalidatePath('/admin/products')
   revalidatePath(`/products/${parsed.data.slug}`)
   revalidatePath('/products')
+  revalidatePath('/')
   redirect('/admin/products')
 }
 
