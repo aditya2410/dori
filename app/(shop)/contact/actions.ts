@@ -79,13 +79,13 @@ export async function submitContact(
 
   // Notification email
   const fromEmail  = process.env.RESEND_FROM_EMAIL
-  const toEmail    = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? 'hello@dorijaipur.in'
+  const toEmail    = process.env.CONTACT_NOTIFICATION_EMAIL   // private delivery address, never shown on site
   const resendKey  = process.env.RESEND_API_KEY
 
   console.log('[contact] email config →', { from: fromEmail, to: toEmail, hasKey: !!resendKey })
 
-  if (!resendKey || !fromEmail) {
-    console.error('[contact] RESEND_API_KEY or RESEND_FROM_EMAIL is not set — skipping email')
+  if (!resendKey || !fromEmail || !toEmail) {
+    console.error('[contact] RESEND_API_KEY, RESEND_FROM_EMAIL, or CONTACT_NOTIFICATION_EMAIL is not set — skipping email')
     return { ok: true }
   }
 
