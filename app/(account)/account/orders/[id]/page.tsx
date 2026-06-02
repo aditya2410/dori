@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { formatPrice } from '@/lib/utils'
+import { AccountSubNav } from '@/components/account/account-sub-nav'
 import type { OrderStatus, ShippingAddress } from '@/types/database.types'
 
 export const metadata: Metadata = { title: 'Order Detail' }
@@ -70,6 +71,9 @@ export default async function OrderDetailPage({
   const isBad = TERMINAL_BAD.includes(order.status as OrderStatus)
 
   return (
+    <>
+      <AccountSubNav />
+      <main className="container py-12 max-w-2xl">
     <div className="space-y-8">
       {/* Back */}
       <div className="space-y-1">
@@ -187,5 +191,7 @@ export default async function OrderDetailPage({
         {addr.phone && <p className="text-muted-foreground">{addr.phone}</p>}
       </div>
     </div>
+      </main>
+    </>
   )
 }

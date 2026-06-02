@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Separator } from '@/components/ui/separator'
 import { AddressForm } from '@/components/account/address-form'
 import { EditableAddressList } from '@/components/account/editable-address-list'
+import { AccountSubNav } from '@/components/account/account-sub-nav'
 
 export const metadata = { title: 'Addresses' }
 
@@ -21,6 +22,9 @@ export default async function AddressesPage() {
     .order('created_at')
 
   return (
+    <>
+      <AccountSubNav />
+      <main className="container py-12 max-w-2xl">
     <div className="space-y-10">
       <div className="space-y-1">
         <h1 className="font-serif text-3xl font-normal">Saved Addresses</h1>
@@ -40,5 +44,7 @@ export default async function AddressesPage() {
         <AddressForm />
       </div>
     </div>
+      </main>
+    </>
   )
 }

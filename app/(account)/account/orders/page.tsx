@@ -5,6 +5,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { formatPrice } from '@/lib/utils'
+import { AccountSubNav } from '@/components/account/account-sub-nav'
 import type { OrderStatus } from '@/types/database.types'
 
 export const metadata: Metadata = { title: 'Orders' }
@@ -32,6 +33,9 @@ export default async function OrdersPage() {
     .order('created_at', { ascending: false })
 
   return (
+    <>
+      <AccountSubNav />
+      <main className="container py-12 max-w-2xl">
     <div className="space-y-8">
       <div className="space-y-1">
         <h1 className="font-serif text-3xl font-normal">Orders</h1>
@@ -79,5 +83,7 @@ export default async function OrdersPage() {
         </div>
       )}
     </div>
+      </main>
+    </>
   )
 }
