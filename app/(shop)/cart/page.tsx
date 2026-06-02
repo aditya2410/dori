@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { formatPrice } from '@/lib/utils'
 
+const SHIPPING_PAISE = 15_000
+
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalPaise, itemCount, isHydrated } = useCart()
 
@@ -127,7 +129,7 @@ export default function CartPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Shipping</span>
-              <span className="text-muted-foreground">Calculated at checkout</span>
+              <span>{formatPrice(SHIPPING_PAISE)}</span>
             </div>
           </div>
 
@@ -135,7 +137,7 @@ export default function CartPage() {
 
           <div className="flex justify-between font-medium">
             <span>Total</span>
-            <span>{formatPrice(totalPaise)}</span>
+            <span>{formatPrice(totalPaise + SHIPPING_PAISE)}</span>
           </div>
 
           <Button size="lg" className="w-full" asChild>

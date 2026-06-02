@@ -86,8 +86,16 @@ export function MobileNav({ series, user }: MobileNavProps) {
                 )}
               />
             </button>
-            {collectionsOpen && series.length > 0 && (
+            {collectionsOpen && (
               <div className="pb-3 pl-4 space-y-0.5">
+                <SheetClose asChild>
+                  <Link
+                    href="/products"
+                    className="block py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    All Bags
+                  </Link>
+                </SheetClose>
                 {series.map((s) => (
                   <SheetClose key={s.id} asChild>
                     <Link

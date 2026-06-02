@@ -72,21 +72,25 @@ export async function SiteHeader() {
               Collections
               <ChevronDown className="size-3.5 transition-transform duration-200 group-hover:rotate-180" />
             </button>
-            {activeSeries.length > 0 && (
-              <div className="absolute top-full left-0 pt-3 hidden group-hover:block z-50">
-                <div className="bg-background border border-border min-w-[160px] py-1 shadow-sm">
-                  {activeSeries.map((s) => (
-                    <Link
-                      key={s.id}
-                      href={`/collections/${s.slug}`}
-                      className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors tracking-wide"
-                    >
-                      {s.name}
-                    </Link>
-                  ))}
-                </div>
+            <div className="absolute top-full left-0 pt-3 hidden group-hover:block z-50">
+              <div className="bg-background border border-border min-w-[160px] py-1 shadow-sm">
+                <Link
+                  href="/products"
+                  className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors tracking-wide"
+                >
+                  All Bags
+                </Link>
+                {activeSeries.map((s) => (
+                  <Link
+                    key={s.id}
+                    href={`/collections/${s.slug}`}
+                    className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors tracking-wide"
+                  >
+                    {s.name}
+                  </Link>
+                ))}
               </div>
-            )}
+            </div>
           </div>
 
           <Link

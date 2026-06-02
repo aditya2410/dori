@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { X, Upload } from 'lucide-react'
+import { X, Upload, GripVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface ImageUploaderProps {
@@ -14,6 +14,7 @@ export function ImageUploader({ existingImages, onChange }: ImageUploaderProps) 
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const dragIndex = useRef<number | null>(null)
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
@@ -52,6 +53,25 @@ export function ImageUploader({ existingImages, onChange }: ImageUploaderProps) 
     onChange(updated)
   }
 
+  function handleDragStart(index: number) {
+    dragIndex.current = index
+  }
+
+  function handleDragOver(e: React.DragEvent, index: number) {
+    e.preventDefault()
+    if (dragIndex.current === null || dragIndex.current === index) return
+    const reordered = [...images]
+    const [moved] = reordered.splice(dragIndex.current, 1)
+    reordered.splice(index, 0, moved)
+    dragIndex.current = index
+    setImages(reordered)
+    onChange(reordered)
+  }
+
+  function handleDragEnd() {
+    dragIndex.current = null
+  }
+
   return (
     <div className="space-y-3">
       {images.length > 0 && (
@@ -59,10 +79,17 @@ export function ImageUploader({ existingImages, onChange }: ImageUploaderProps) 
           {images.map((url, i) => (
             <div
               key={url}
-              className="relative size-24 border bg-secondary overflow-hidden shrink-0"
+              draggable
+              onDragStart={() => handleDragStart(i)}
+              onDragOver={(e) => handleDragOver(e, i)}
+              onDragEnd={handleDragEnd}
+              className="relative size-24 border bg-secondary overflow-hidden shrink-0 cursor-grab active:cursor-grabbing"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={url} alt={`Product image ${i + 1}`} className="h-full w-full object-cover" />
+              <div className="absolute top-1 left-1 text-background/80 pointer-events-none">
+                <GripVertical className="size-3" />
+              </div>
               <button
                 type="button"
                 onClick={() => removeImage(url)}
@@ -97,7 +124,7 @@ export function ImageUploader({ existingImages, onChange }: ImageUploaderProps) 
           {uploading ? 'Uploading…' : 'Add images'}
         </Button>
         <p className="text-xs text-muted-foreground">
-          JPEG, PNG, WebP — max 5 MB each
+          JPEG, PNG, WebP — max 5 MB each · Drag to reorder
         </p>
       </div>
 
