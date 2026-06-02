@@ -136,7 +136,12 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
       prefill: { name: userName, email: userEmail, contact: userPhone },
       theme: { color: '#1a1a1a' },
       modal: {
-        ondismiss: () => setProcessing(false),
+        ondismiss: () => {
+          setProcessing(false)
+          // Cancel the pending order so stock is restored and it doesn't
+          // appear as "Awaiting Payment" in the user's order history.
+          fetch(`/api/orders/${orderData.orderId}/cancel`, { method: 'POST' }).catch(() => {})
+        },
       },
       handler: async (response) => {
         // 3. Verify payment
