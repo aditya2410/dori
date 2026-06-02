@@ -7,9 +7,7 @@ import {
   markShippedAction,
   markDelivered,
   cancelOrder,
-  refundOrder,
   type ShipState,
-  type RefundState,
 } from '@/app/(admin)/admin/orders/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,15 +23,6 @@ function ShipSubmitButton() {
   )
 }
 
-function RefundButton() {
-  const { pending } = useFormStatus()
-  return (
-    <Button type="submit" size="sm" variant="outline" disabled={pending}>
-      {pending && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
-      {pending ? 'Processing…' : 'Issue Refund'}
-    </Button>
-  )
-}
 
 export function OrderActions({ orderId, status }: { orderId: string; status: string }) {
   const [showShipForm, setShowShipForm] = useState(false)
@@ -43,14 +32,10 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
   const boundShip = markShippedAction.bind(null, orderId)
   const [shipState, shipAction] = useActionState<ShipState, FormData>(boundShip, null)
 
-  const boundRefund = refundOrder.bind(null, orderId)
-  const [refundState, refundAction] = useActionState<RefundState, FormData>(boundRefund, null)
-
   if (optimisticStatus === 'cancelled' || optimisticStatus === 'refunded') return null
 
   const canShip    = optimisticStatus === 'paid'
   const canDeliver = optimisticStatus === 'shipped'
-  const canRefund  = ['paid', 'shipped', 'delivered'].includes(optimisticStatus)
   const canCancel  = ['paid', 'created'].includes(optimisticStatus)
 
   function handleDeliver() {
@@ -90,19 +75,6 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
           </Button>
         )}
 
-        {canRefund && (
-          <form
-            action={refundAction}
-            onSubmit={(e) => {
-              if (!window.confirm('Issue a full refund to the customer? This cannot be undone.')) {
-                e.preventDefault()
-              }
-            }}
-          >
-            <RefundButton />
-          </form>
-        )}
-
         {canCancel && (
           <Button size="sm" variant="outline" disabled={isPending} onClick={handleCancel}>
             {isPending && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
@@ -110,17 +82,6 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
           </Button>
         )}
       </div>
-
-      {/* Refund result messages */}
-      {refundState && 'error' in refundState && (
-        <div className="rounded border border-destructive/40 bg-destructive/5 p-4 space-y-1">
-          <p className="text-sm font-medium text-destructive">Refund could not be processed automatically</p>
-          <p className="text-sm text-muted-foreground">{refundState.error}</p>
-        </div>
-      )}
-      {refundState && 'success' in refundState && (
-        <p className="text-sm text-green-700">Refund issued successfully via Razorpay.</p>
-      )}
 
       {/* Inline ship form */}
       {showShipForm && optimisticStatus === 'paid' && (
