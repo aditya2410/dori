@@ -4,6 +4,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { CartIcon } from './cart-icon'
 import { MobileNav } from './mobile-nav'
+import { SocialLinks } from './social-links'
 
 export async function SiteHeader() {
   const supabase = await createClient()
@@ -111,8 +112,10 @@ export async function SiteHeader() {
           Dori Jaipur
         </Link>
 
-        {/* Right icons */}
-        <div className="flex items-center gap-0.5 justify-end flex-1">
+        {/* Right: social + cart + account */}
+        <div className="flex items-center gap-2 justify-end flex-1">
+          <SocialLinks iconClassName="size-3.5" />
+          {/* subtle divider only when social links are present */}
           <CartIcon />
           {user ? (
             <Button variant="ghost" size="icon" asChild>
