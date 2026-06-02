@@ -158,6 +158,33 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationData) {
   })
 }
 
+// ── Delivery notification ─────────────────────────────────────────────────────
+
+export async function sendDeliveryEmail(data: { to: string; orderNumber: string }) {
+  const html = layout(`
+    ${heading('Your order has been delivered')}
+    ${bodyText(`Order <strong>${data.orderNumber}</strong> has been delivered. We hope you love it!`)}
+
+    ${divider()}
+
+    ${bodyText('If you have any questions or concerns, simply reply to this email and we\'ll be happy to help.')}
+
+    ${divider()}
+
+    ${bodyText('Thank you for choosing DORI. We\'d love to see how you\'re styling your new piece — tag us on Instagram.')}
+  `)
+
+  const text = `Your order ${data.orderNumber} has been delivered.\n\nWe hope you love it!\n\nThank you for choosing DORI.\n\n— DORI`
+
+  await resend.emails.send({
+    from: FROM,
+    to: data.to,
+    subject: `Your order has been delivered — ${data.orderNumber}`,
+    html,
+    text,
+  })
+}
+
 // ── Shipping notification ─────────────────────────────────────────────────────
 
 export async function sendShippingEmail(data: {

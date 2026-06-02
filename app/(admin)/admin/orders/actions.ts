@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getRazorpay } from '@/lib/razorpay'
-import { sendShippingEmail } from '@/lib/email'
+import { sendShippingEmail, sendDeliveryEmail } from '@/lib/email'
 
 export type ShipState = { error: string } | null
 export type RefundState = { error: string } | { success: true } | null
@@ -53,7 +53,29 @@ export async function markShippedAction(
 
 export async function markDelivered(orderId: string): Promise<void> {
   const service = createServiceClient()
-  await service.from('orders').update({ status: 'delivered' }).eq('id', orderId).eq('status', 'shipped')
+
+  const { data: order } = await service
+    .from('orders')
+    .update({ status: 'delivered' })
+    .eq('id', orderId)
+    .eq('status', 'shipped')
+    .select('order_number, user_id')
+    .single()
+
+  if (order) {
+    try {
+      const { data: authUser } = await service.auth.admin.getUserById(order.user_id)
+      if (authUser.user?.email) {
+        await sendDeliveryEmail({
+          to: authUser.user.email,
+          orderNumber: order.order_number,
+        })
+      }
+    } catch (err) {
+      console.error('[markDelivered] email:', err)
+    }
+  }
+
   revalidate(orderId)
 }
 
