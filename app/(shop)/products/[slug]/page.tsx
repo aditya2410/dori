@@ -4,6 +4,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { formatPrice } from '@/lib/utils'
 import { AddToCart } from '@/components/shop/add-to-cart'
 import { ImageGallery } from '@/components/shop/image-gallery'
+import { DescriptionRenderer } from '@/components/shop/description-renderer'
 
 export const revalidate = 3600
 
@@ -56,7 +57,7 @@ export default async function ProductDetailPage({
           </div>
 
           {product.description && (
-            <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
+            <DescriptionRenderer text={product.description} />
           )}
 
           <div className="pt-2 space-y-2">
