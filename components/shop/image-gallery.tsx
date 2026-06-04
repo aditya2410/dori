@@ -9,7 +9,7 @@ interface ImageGalleryProps {
   productName: string
 }
 
-const SNAP_EASING = 'transform 380ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+const SNAP_EASING = 'transform 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
 
 export function ImageGallery({ images, productName }: ImageGalleryProps) {
   // React state only for dots + thumbnails — NOT for the transform
