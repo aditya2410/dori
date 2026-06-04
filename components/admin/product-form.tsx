@@ -10,9 +10,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ImageUploader } from './image-uploader'
+import { RichTextEditor } from './rich-text-editor'
 import { toSlug } from '@/lib/utils'
 
 interface Product {
@@ -53,6 +53,7 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
   const [imageUrls, setImageUrls] = useState<string[]>(
     Array.isArray(product?.images) ? (product.images as string[]) : [],
   )
+  const [description, setDescription] = useState(product?.description ?? '')
   const [nameValue, setNameValue] = useState(product?.name ?? '')
   const [slugValue, setSlugValue] = useState(product?.slug ?? '')
   const [slugTouched, setSlugTouched] = useState(isEdit)
@@ -75,6 +76,7 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
   return (
     <form action={formAction} className="space-y-8 max-w-2xl">
       <input type="hidden" name="images" value={JSON.stringify(imageUrls)} />
+      <input type="hidden" name="description" value={description} />
       {/* Convert sentinel back to empty string so the action receives '' for "no series" */}
       <input type="hidden" name="series_id" value={seriesId === NONE ? '' : seriesId} />
 
@@ -106,13 +108,11 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          name="description"
-          defaultValue={product?.description ?? ''}
+        <Label>Description</Label>
+        <RichTextEditor
+          value={description}
+          onChange={setDescription}
           placeholder="Describe the material, craft, and care instructions…"
-          rows={5}
         />
       </div>
 
