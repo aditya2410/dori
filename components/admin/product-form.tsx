@@ -56,7 +56,7 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
   const [description, setDescription] = useState(product?.description ?? '')
   const [nameValue, setNameValue] = useState(product?.name ?? '')
   const [slugValue, setSlugValue] = useState(product?.slug ?? '')
-  const [slugTouched, setSlugTouched] = useState(isEdit)
+  const [slugTouched, setSlugTouched] = useState(false)
   const NONE = '__none__'
   const [seriesId, setSeriesId] = useState<string>(currentSeriesId ?? NONE)
   const [isBestseller, setIsBestseller] = useState(product?.is_bestseller ?? false)
