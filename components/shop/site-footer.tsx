@@ -43,7 +43,7 @@ export function SiteFooter() {
               Dori Jaipur
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-              Handcrafted luxury goods from Jaipur. Each piece is made with care, using traditional techniques passed down through generations.
+              Dori Jaipur crafts luxury bags, keychains and embroidered shirts — each piece handmade by skilled artisans in Jaipur using traditional techniques passed down through generations.
             </p>
             <SocialLinks />
           </div>

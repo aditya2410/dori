@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
+import Script from 'next/script'
 import { Providers } from './providers'
 import './globals.css'
 
@@ -15,37 +16,53 @@ const playfair = Playfair_Display({
   display: 'swap',
 })
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+const SITE_URL = 'https://dorijaipur.in'
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: 'DORI — Handcrafted Luxury Goods',
-    template: '%s | DORI',
+    default: 'Dori Jaipur — Handcrafted Luxury Accessories',
+    template: '%s | Dori Jaipur',
   },
-  description: 'Handcrafted luxury goods, thoughtfully made. Slow craft, considered living.',
+  description:
+    'Shop handcrafted luxury bags, keychains and embroidered shirts by Dori Jaipur. Made by skilled artisans in Jaipur, India using traditional techniques passed down through generations.',
   openGraph: {
     type: 'website',
-    siteName: 'DORI',
-    title: 'DORI — Handcrafted Luxury Goods',
-    description: 'Handcrafted luxury goods, thoughtfully made.',
-    url: siteUrl,
+    siteName: 'Dori Jaipur',
+    title: 'Dori Jaipur — Handcrafted Luxury Accessories',
+    description:
+      'Shop handcrafted luxury bags, keychains and embroidered shirts by Dori Jaipur. Made by artisans in Jaipur, India.',
+    url: SITE_URL,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'DORI — Handcrafted Luxury Goods',
-    description: 'Handcrafted luxury goods, thoughtfully made.',
+    title: 'Dori Jaipur — Handcrafted Luxury Accessories',
+    description:
+      'Shop handcrafted luxury bags, keychains and embroidered shirts by Dori Jaipur. Made by artisans in Jaipur, India.',
   },
   robots: { index: true, follow: true },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Dori Jaipur',
+  alternateName: 'DORI',
+  url: SITE_URL,
+  description:
+    'Handcrafted luxury bags, keychains and embroidered shirts made by artisans in Jaipur, India.',
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+      <head>
+        <Script
+          id="website-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+      </head>
       <body>
         <Providers>{children}</Providers>
       </body>
