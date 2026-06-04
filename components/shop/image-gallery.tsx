@@ -43,10 +43,10 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
     }
 
     if (isHorizontal.current) {
-      // Rubber-band resistance at the first and last image
       const atStart = active === 0 && dx > 0
       const atEnd   = active === images.length - 1 && dx < 0
-      setDragOffset(dx * (atStart || atEnd ? 0.2 : 1))
+      // Hard stop at edges — no movement past first or last image
+      if (!atStart && !atEnd) setDragOffset(dx)
     }
   }
 
@@ -79,7 +79,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
           style={{
             width: `${images.length * 100}%`,
             transform: `translateX(calc(-${(active / images.length) * 100}% + ${dragOffset}px))`,
-            transition: isDragging ? 'none' : 'transform 380ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            transition: isDragging ? 'transform 0ms' : 'transform 380ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
             willChange: 'transform',
           }}
         >
