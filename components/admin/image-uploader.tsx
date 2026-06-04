@@ -15,26 +15,6 @@ interface UploadState {
   progress: number       // 0–100 for current file
 }
 
-function uploadFile(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-    const body = new FormData()
-    body.append('file', file)
-
-    xhr.open('POST', '/api/upload')
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        const json = JSON.parse(xhr.responseText)
-        resolve(json.url as string)
-      } else {
-        reject(new Error(JSON.parse(xhr.responseText)?.error ?? 'Upload failed.'))
-      }
-    }
-    xhr.onerror = () => reject(new Error('Network error.'))
-    xhr.send(body)
-  })
-}
-
 export function ImageUploader({ existingImages, onChange }: ImageUploaderProps) {
   const [images, setImages] = useState<string[]>(existingImages)
   const [uploadState, setUploadState] = useState<UploadState | null>(null)
@@ -53,11 +33,29 @@ export function ImageUploader({ existingImages, onChange }: ImageUploaderProps) 
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
+      const ext = file.name.split('.').pop() ?? 'jpg'
 
+      // Step 1: get a signed upload URL from our server (tiny request, no file bytes)
+      let signedUrl = ''
+      let publicUrl = ''
+      try {
+        const res = await fetch('/api/upload/sign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ext, contentType: file.type }),
+        })
+        const json = await res.json()
+        if (!res.ok) { setError(json.error ?? 'Failed to prepare upload.'); continue }
+        signedUrl = json.signedUrl
+        publicUrl = json.publicUrl
+      } catch {
+        setError('Network error. Please try again.')
+        continue
+      }
+
+      // Step 2: PUT file directly to Supabase — bypasses Vercel size limits entirely
       await new Promise<void>((resolve) => {
         const xhr = new XMLHttpRequest()
-        const body = new FormData()
-        body.append('file', file)
 
         xhr.upload.onprogress = (ev) => {
           if (ev.lengthComputable) {
@@ -69,29 +67,21 @@ export function ImageUploader({ existingImages, onChange }: ImageUploaderProps) 
           }
         }
 
-        xhr.open('POST', '/api/upload')
+        xhr.open('PUT', signedUrl)
+        xhr.setRequestHeader('Content-Type', file.type)
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
-            const json = JSON.parse(xhr.responseText)
-            newUrls.push(json.url as string)
-            // Briefly show 100% before moving to next file
+            newUrls.push(publicUrl)
             setUploadState({ totalFiles: files.length, currentIndex: i + 1, progress: 100 })
           } else {
-            try {
-              setError(JSON.parse(xhr.responseText)?.error ?? 'Upload failed.')
-            } catch {
-              setError('Upload failed.')
-            }
+            setError('Upload failed. Please try again.')
           }
           resolve()
         }
-        xhr.onerror = () => {
-          setError('Network error. Please try again.')
-          resolve()
-        }
+        xhr.onerror = () => { setError('Network error. Please try again.'); resolve() }
 
         setUploadState({ totalFiles: files.length, currentIndex: i + 1, progress: 0 })
-        xhr.send(body)
+        xhr.send(file)
       })
     }
 
@@ -219,7 +209,7 @@ export function ImageUploader({ existingImages, onChange }: ImageUploaderProps) 
           {uploading ? `Uploading ${uploadState!.currentIndex} of ${uploadState!.totalFiles}…` : 'Add images'}
         </Button>
         <p className="text-xs text-muted-foreground">
-          JPEG, PNG, WebP — max 5 MB each · Drag to reorder
+          JPEG, PNG, WebP — max 20 MB each · Drag to reorder
         </p>
       </div>
 
