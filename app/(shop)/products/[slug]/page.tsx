@@ -56,19 +56,6 @@ export default async function ProductDetailPage({
             <p className="text-xl">{formatPrice(product.price_paise)}</p>
           </div>
 
-          {product.description && (
-            // HTML from rich-text editor → render directly
-            // Plain text (legacy) → use parser
-            product.description.trimStart().startsWith('<') ? (
-              <div
-                className="text-sm text-muted-foreground leading-relaxed [&_h2]:font-serif [&_h2]:text-base [&_h2]:font-medium [&_h2]:text-foreground [&_h2]:mt-4 [&_h2]:mb-1.5 [&_h3]:font-medium [&_h3]:text-foreground [&_h3]:mt-3 [&_h3]:mb-1 [&_p]:mb-2.5 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2.5 [&_li]:mb-0.5 [&_strong]:font-medium [&_strong]:text-foreground [&_em]:italic"
-                dangerouslySetInnerHTML={{ __html: product.description }}
-              />
-            ) : (
-              <DescriptionRenderer text={product.description} />
-            )
-          )}
-
           <div className="pt-2 space-y-2">
             <AddToCart
               product={{
@@ -86,6 +73,17 @@ export default async function ProductDetailPage({
               </p>
             )}
           </div>
+
+          {product.description && (
+            product.description.trimStart().startsWith('<') ? (
+              <div
+                className="text-sm text-muted-foreground leading-relaxed [&_h2]:font-serif [&_h2]:text-base [&_h2]:font-medium [&_h2]:text-foreground [&_h2]:mt-4 [&_h2]:mb-1.5 [&_h3]:font-medium [&_h3]:text-foreground [&_h3]:mt-3 [&_h3]:mb-1 [&_p]:mb-2.5 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2.5 [&_li]:mb-0.5 [&_strong]:font-medium [&_strong]:text-foreground [&_em]:italic"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
+            ) : (
+              <DescriptionRenderer text={product.description} />
+            )
+          )}
 
           <div className="border-t pt-6 mt-auto">
             <p className="text-xs text-muted-foreground leading-relaxed">
