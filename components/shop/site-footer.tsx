@@ -55,6 +55,7 @@ export function SiteFooter() {
               <FooterLink href="/shipping-policy">Shipping Policy</FooterLink>
               <FooterLink href="/refund-policy">Refund Policy</FooterLink>
               <FooterLink href="/privacy-policy">Privacy Policy</FooterLink>
+              <FooterLink href="/terms">Terms & Conditions</FooterLink>
               <FooterLink href="/contact">Contact Us</FooterLink>
             </nav>
           </div>
