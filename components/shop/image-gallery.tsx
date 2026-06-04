@@ -14,6 +14,8 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const touchStartX = useRef<number | null>(null)
+  const touchStartY = useRef<number | null>(null)
+  const isHorizontal = useRef<boolean | null>(null)
 
   if (images.length === 0) {
     return (
@@ -25,24 +27,38 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
 
   function handleTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+    isHorizontal.current = null
     setIsDragging(true)
   }
 
   function handleTouchMove(e: React.TouchEvent) {
-    if (touchStartX.current === null) return
-    setDragOffset(e.touches[0].clientX - touchStartX.current)
+    if (touchStartX.current === null || touchStartY.current === null) return
+    const dx = e.touches[0].clientX - touchStartX.current
+    const dy = e.touches[0].clientY - touchStartY.current
+
+    // Lock direction on first significant movement
+    if (isHorizontal.current === null && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
+      isHorizontal.current = Math.abs(dx) > Math.abs(dy)
+    }
+
+    if (isHorizontal.current) {
+      setDragOffset(dx)
+    }
   }
 
   function handleTouchEnd(e: React.TouchEvent) {
     if (touchStartX.current === null) return
     const delta = e.changedTouches[0].clientX - touchStartX.current
     touchStartX.current = null
+    touchStartY.current = null
     setIsDragging(false)
     setDragOffset(0)
 
-    if (Math.abs(delta) < 40) return
+    if (!isHorizontal.current || Math.abs(delta) < 40) return
     if (delta < 0) setActive((p) => Math.min(p + 1, images.length - 1))
     else setActive((p) => Math.max(p - 1, 0))
+    isHorizontal.current = null
   }
 
   return (
@@ -50,6 +66,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
       {/* Main strip */}
       <div
         className="aspect-[3/4] bg-secondary overflow-hidden relative"
+        style={{ touchAction: 'pan-y' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
