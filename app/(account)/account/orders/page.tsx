@@ -29,6 +29,7 @@ export default async function OrdersPage() {
     .from('orders')
     .select('id, order_number, status, total_paise, created_at')
     .eq('user_id', user.id)
+    .neq('status', 'cancelled')
     .order('created_at', { ascending: false })
 
   return (
