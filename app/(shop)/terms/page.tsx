@@ -25,7 +25,7 @@ export default function TermsPage() {
         </Section>
 
         <Section title="Pricing">
-          <p>All prices are listed in Indian Rupees (₹) and are inclusive of applicable taxes unless stated otherwise. We reserve the right to update prices at any time. The price at the time of your order confirmation is the price you will be charged.</p>
+          <p>All prices are listed in Indian Rupees (₹). We reserve the right to update prices at any time. The price at the time of your order confirmation is the price you will be charged.</p>
         </Section>
 
         <Section title="Orders & Payment">
