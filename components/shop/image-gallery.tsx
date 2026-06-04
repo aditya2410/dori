@@ -43,7 +43,10 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
     }
 
     if (isHorizontal.current) {
-      setDragOffset(dx)
+      // Rubber-band resistance at the first and last image
+      const atStart = active === 0 && dx > 0
+      const atEnd   = active === images.length - 1 && dx < 0
+      setDragOffset(dx * (atStart || atEnd ? 0.2 : 1))
     }
   }
 
@@ -75,7 +78,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
           className="flex h-full"
           style={{
             width: `${images.length * 100}%`,
-            transform: `translateX(calc(-${(active / images.length) * 100}% + ${dragOffset / images.length}px))`,
+            transform: `translateX(calc(-${(active / images.length) * 100}% + ${dragOffset}px))`,
             transition: isDragging ? 'none' : 'transform 380ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
             willChange: 'transform',
           }}
