@@ -4,7 +4,7 @@ import { useActionState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useFormStatus } from 'react-dom'
-import { login, loginWithGoogle } from '../actions'
+import { signup, loginWithGoogle } from '../actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,29 +14,21 @@ function SubmitButton() {
   const { pending } = useFormStatus()
   return (
     <Button type="submit" className="w-full" size="lg" disabled={pending}>
-      {pending ? 'Signing in…' : 'Sign in'}
+      {pending ? 'Creating account…' : 'Create account'}
     </Button>
   )
 }
 
-export default function LoginForm() {
+export default function SignupForm() {
   const searchParams = useSearchParams()
   const next = searchParams.get('next') ?? ''
-  const urlError = searchParams.get('error')
-
-  const [state, formAction] = useActionState(login, null)
-
-  const reason = searchParams.get('reason')
-  const errorMessage =
-    (state && 'error' in state ? state.error : null) ??
-    (urlError === 'google_oauth_failed' ? 'Google sign-in failed. Please try again.' : null) ??
-    (urlError === 'callback_failed' ? `Sign-in link failed${reason ? `: ${reason}` : ''}. Try signing in manually.` : null)
+  const [state, formAction] = useActionState(signup, null)
 
   return (
     <div className="w-full max-w-sm space-y-8">
       <div className="space-y-1 text-center">
-        <h1 className="font-serif text-3xl font-normal">Welcome back</h1>
-        <p className="text-sm text-muted-foreground">Sign in to your DORI account</p>
+        <h1 className="font-serif text-3xl font-normal">Create an account</h1>
+        <p className="text-sm text-muted-foreground">Join DORI for a seamless experience</p>
       </div>
 
       <form action={loginWithGoogle}>
@@ -57,32 +49,34 @@ export default function LoginForm() {
         <input type="hidden" name="next" value={next} />
 
         <div className="space-y-1.5">
+          <Label htmlFor="full_name">Full name</Label>
+          <Input id="full_name" name="full_name" type="text" autoComplete="name" placeholder="Priya Sharma" required />
+        </div>
+
+        <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
           <Input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
         </div>
 
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link
-              href="/forgot-password"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Forgot password?
-            </Link>
-          </div>
-          <Input id="password" name="password" type="password" autoComplete="current-password" placeholder="••••••••" required />
+          <Label htmlFor="password">Password</Label>
+          <Input id="password" name="password" type="password" autoComplete="new-password" placeholder="Min. 8 characters" required minLength={8} />
         </div>
 
-        {errorMessage && <p className="text-sm text-destructive">{errorMessage}</p>}
+        {state && 'error' in state && (
+          <p className="text-sm text-destructive">{state.error}</p>
+        )}
+        {state && 'message' in state && (
+          <p className="text-sm text-muted-foreground border border-border/60 p-3">{state.message}</p>
+        )}
 
         <SubmitButton />
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
-        No account?{' '}
-        <Link href="/signup" className="text-foreground underline underline-offset-4 hover:opacity-70 transition-opacity">
-          Create one
+        Already have an account?{' '}
+        <Link href="/login" className="text-foreground underline underline-offset-4 hover:opacity-70 transition-opacity">
+          Sign in
         </Link>
       </p>
     </div>

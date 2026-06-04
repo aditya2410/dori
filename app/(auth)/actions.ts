@@ -17,6 +17,7 @@ const signupSchema = z.object({
   full_name: z.string().min(2, 'Name must be at least 2 characters.'),
   email: z.string().email('Please enter a valid email address.'),
   password: z.string().min(8, 'Password must be at least 8 characters.'),
+  next: z.string().startsWith('/').optional().catch(undefined),
 })
 
 export async function login(_prev: AuthState, formData: FormData): Promise<AuthState> {
@@ -52,6 +53,7 @@ export async function signup(_prev: AuthState, formData: FormData): Promise<Auth
     full_name: formData.get('full_name'),
     email: formData.get('email'),
     password: formData.get('password'),
+    next: formData.get('next'),
   })
 
   if (!parsed.success) {
@@ -87,18 +89,23 @@ export async function signup(_prev: AuthState, formData: FormData): Promise<Auth
     return { message: 'Check your email — we sent you a confirmation link.' }
   }
 
-  redirect('/account')
+  redirect(parsed.data.next ?? '/account')
 }
 
-export async function loginWithGoogle(): Promise<never> {
+export async function loginWithGoogle(formData: FormData): Promise<never> {
   const headersList = await headers()
   const origin = headersList.get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL!
+
+  const next = formData.get('next')
+  const callbackUrl = next && typeof next === 'string' && next.startsWith('/')
+    ? `${origin}/callback?next=${encodeURIComponent(next)}`
+    : `${origin}/callback`
 
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${origin}/callback`,
+      redirectTo: callbackUrl,
       queryParams: { access_type: 'offline', prompt: 'consent' },
     },
   })
