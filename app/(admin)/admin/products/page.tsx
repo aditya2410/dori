@@ -5,6 +5,7 @@ import { formatPrice } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { toggleProductActive } from './actions'
+import { DeleteProductButton } from '@/components/admin/delete-product-button'
 
 export const metadata = { title: 'Products — Admin' }
 
@@ -100,6 +101,7 @@ export default async function AdminProductsPage() {
                             {product.is_active ? 'Hide from shop' : 'Show in shop'}
                           </Button>
                         </form>
+                        <DeleteProductButton productId={product.id} productName={product.name} />
                       </div>
                     </td>
                   </tr>

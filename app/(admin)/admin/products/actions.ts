@@ -158,3 +158,12 @@ export async function toggleProductActive(productId: string, newActive: boolean)
   revalidatePath('/admin/products')
   revalidatePath('/products')
 }
+
+export async function deleteProduct(productId: string): Promise<void> {
+  const supabase = createServiceClient()
+  await supabase.from('product_series').delete().eq('product_id', productId)
+  await supabase.from('products').delete().eq('id', productId)
+  revalidatePath('/admin/products')
+  revalidatePath('/products')
+  revalidatePath('/')
+}
