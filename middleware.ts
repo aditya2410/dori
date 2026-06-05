@@ -1,6 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
+function newRequestId() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`
+}
+
 const PROTECTED_PREFIXES = ['/checkout', '/account']
 const ADMIN_PREFIX = '/admin'
 
@@ -29,6 +33,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
+  // Stamp every response with a unique request ID for log correlation
+  supabaseResponse.headers.set('x-request-id', newRequestId())
   return supabaseResponse
 }
 
