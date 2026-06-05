@@ -30,6 +30,7 @@ export function Hero() {
         </p>
         <Link
           href={heroConfig.ctaHref}
+          data-track="hero-cta"
           className="inline-block bg-white text-foreground text-xs tracking-[0.2em] px-10 py-4 mt-8 hover:bg-white/90 transition-colors"
         >
           {heroConfig.ctaText}

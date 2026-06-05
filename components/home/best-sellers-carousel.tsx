@@ -167,6 +167,7 @@ export function BestSellersCarousel({ products }: { products: Product[] }) {
       <button
         onClick={prev}
         aria-label="Previous"
+        data-track="bestsellers-prev"
         className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 size-9 items-center justify-center rounded-full bg-background border border-border shadow-sm hover:bg-secondary transition-colors"
       >
         <ChevronLeft className="size-4" />
@@ -174,6 +175,7 @@ export function BestSellersCarousel({ products }: { products: Product[] }) {
       <button
         onClick={next}
         aria-label="Next"
+        data-track="bestsellers-next"
         className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 size-9 items-center justify-center rounded-full bg-background border border-border shadow-sm hover:bg-secondary transition-colors"
       >
         <ChevronRight className="size-4" />

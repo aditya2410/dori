@@ -62,6 +62,7 @@ export async function SiteHeader() {
         <nav className="flex items-center gap-7 flex-1">
           <Link
             href="/"
+            data-track="nav-home"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors tracking-wide"
           >
             Home
@@ -77,6 +78,7 @@ export async function SiteHeader() {
               <div className="bg-background border border-border min-w-[160px] py-1 shadow-sm">
                 <Link
                   href="/products"
+                  data-track="nav-all-bags"
                   className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors tracking-wide"
                 >
                   All Bags
@@ -85,6 +87,7 @@ export async function SiteHeader() {
                   <Link
                     key={s.id}
                     href={`/collections/${s.slug}`}
+                    data-track={`nav-collection:${s.slug}`}
                     className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors tracking-wide"
                   >
                     {s.name}
@@ -96,6 +99,7 @@ export async function SiteHeader() {
 
           <Link
             href="/about"
+            data-track="nav-about"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors tracking-wide"
           >
             About
@@ -103,6 +107,7 @@ export async function SiteHeader() {
 
           <Link
             href="/contact"
+            data-track="nav-contact"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors tracking-wide"
           >
             Contact
@@ -125,13 +130,13 @@ export async function SiteHeader() {
           <CartIcon />
           {user ? (
             <Button variant="ghost" size="icon" asChild>
-              <Link href="/account" aria-label="Account">
+              <Link href="/account" aria-label="Account" data-track="nav-account">
                 <User className="size-4" />
               </Link>
             </Button>
           ) : (
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/login" className="text-sm">Sign in</Link>
+              <Link href="/login" data-track="nav-sign-in" className="text-sm">Sign in</Link>
             </Button>
           )}
         </div>

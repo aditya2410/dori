@@ -16,7 +16,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const firstImage = images[0]
 
   return (
-    <Link href={`/products/${product.slug}`} className="group block">
+    <Link href={`/products/${product.slug}`} data-track={`product-card:${product.slug}`} className="group block">
       <div className="aspect-[3/4] bg-secondary overflow-hidden relative">
         {firstImage ? (
           <Image

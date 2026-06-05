@@ -48,23 +48,23 @@ export function AccountNav({ isAdmin, email }: AccountNavProps) {
         {/* Nav links */}
         <nav className="flex-1 overflow-y-auto px-6 py-4">
           <SheetClose asChild>
-            <Link href="/account/orders" className="flex items-center py-3.5 text-sm tracking-wide border-b border-border/40 hover:text-muted-foreground transition-colors">
+            <Link href="/account/orders" data-track="account-nav-orders" className="flex items-center py-3.5 text-sm tracking-wide border-b border-border/40 hover:text-muted-foreground transition-colors">
               My Orders
             </Link>
           </SheetClose>
           <SheetClose asChild>
-            <Link href="/account/addresses" className="flex items-center py-3.5 text-sm tracking-wide border-b border-border/40 hover:text-muted-foreground transition-colors">
+            <Link href="/account/addresses" data-track="account-nav-addresses" className="flex items-center py-3.5 text-sm tracking-wide border-b border-border/40 hover:text-muted-foreground transition-colors">
               Saved Addresses
             </Link>
           </SheetClose>
           <SheetClose asChild>
-            <Link href="/account/profile" className="flex items-center py-3.5 text-sm tracking-wide border-b border-border/40 hover:text-muted-foreground transition-colors">
+            <Link href="/account/profile" data-track="account-nav-profile" className="flex items-center py-3.5 text-sm tracking-wide border-b border-border/40 hover:text-muted-foreground transition-colors">
               Profile
             </Link>
           </SheetClose>
           {isAdmin && (
             <SheetClose asChild>
-              <Link href="/admin" className="flex items-center py-3.5 text-sm tracking-wide border-b border-border/40 hover:text-muted-foreground transition-colors">
+              <Link href="/admin" data-track="account-nav-admin" className="flex items-center py-3.5 text-sm tracking-wide border-b border-border/40 hover:text-muted-foreground transition-colors">
                 Admin Panel
               </Link>
             </SheetClose>

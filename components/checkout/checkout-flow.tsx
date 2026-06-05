@@ -264,6 +264,7 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
               <Button
                 size="lg"
                 className="w-full"
+                data-track="checkout-continue-to-review"
                 disabled={!selectedId}
                 onClick={() => setStep('review')}
               >
@@ -364,6 +365,7 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
             <Button
               size="lg"
               className="w-full"
+              data-track="checkout-pay"
               onClick={handlePay}
               disabled={processing}
             >

@@ -75,6 +75,7 @@ export default function CartPage() {
                     </Link>
                     <button
                       onClick={() => removeItem(item.productId)}
+                      data-track={`cart-remove:${item.slug}`}
                       className="text-muted-foreground hover:text-foreground transition-colors shrink-0 mt-0.5"
                       aria-label="Remove item"
                     >
@@ -90,6 +91,7 @@ export default function CartPage() {
                     <div className="flex items-center border">
                       <button
                         onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                        data-track={`cart-qty-decrease:${item.slug}`}
                         className="px-2.5 py-1.5 hover:bg-secondary transition-colors"
                         aria-label="Decrease"
                       >
@@ -100,6 +102,7 @@ export default function CartPage() {
                       </span>
                       <button
                         onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                        data-track={`cart-qty-increase:${item.slug}`}
                         className="px-2.5 py-1.5 hover:bg-secondary transition-colors"
                         aria-label="Increase"
                       >
@@ -141,7 +144,7 @@ export default function CartPage() {
           </div>
 
           <Button size="lg" className="w-full" asChild>
-            <Link href="/checkout">Proceed to Checkout</Link>
+            <Link href="/checkout" data-track="proceed-to-checkout">Proceed to Checkout</Link>
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">

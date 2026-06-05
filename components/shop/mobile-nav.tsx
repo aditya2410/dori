@@ -66,6 +66,7 @@ export function MobileNav({ series, user }: MobileNavProps) {
           <SheetClose asChild>
             <Link
               href="/"
+              data-track="mobile-nav-home"
               className="flex items-center py-3.5 text-sm tracking-wide border-b border-border/40 hover:text-muted-foreground transition-colors"
             >
               Home
@@ -91,6 +92,7 @@ export function MobileNav({ series, user }: MobileNavProps) {
                 <SheetClose asChild>
                   <Link
                     href="/products"
+                    data-track="mobile-nav-all-bags"
                     className="block py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     All Bags
@@ -100,6 +102,7 @@ export function MobileNav({ series, user }: MobileNavProps) {
                   <SheetClose key={s.id} asChild>
                     <Link
                       href={`/collections/${s.slug}`}
+                      data-track={`mobile-nav-collection:${s.slug}`}
                       className="block py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {s.name}
@@ -113,6 +116,7 @@ export function MobileNav({ series, user }: MobileNavProps) {
           <SheetClose asChild>
             <Link
               href="/about"
+              data-track="mobile-nav-about"
               className="flex items-center py-3.5 text-sm tracking-wide border-b border-border/40 hover:text-muted-foreground transition-colors"
             >
               About Us
@@ -122,6 +126,7 @@ export function MobileNav({ series, user }: MobileNavProps) {
           <SheetClose asChild>
             <Link
               href="/contact"
+              data-track="mobile-nav-contact"
               className="flex items-center py-3.5 text-sm tracking-wide border-b border-border/40 hover:text-muted-foreground transition-colors"
             >
               Contact Us
