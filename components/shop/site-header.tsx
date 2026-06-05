@@ -32,6 +32,7 @@ export async function SiteHeader() {
         <div className="flex justify-center">
           <Link
             href="/"
+            aria-label="Dori Jaipur"
             className="font-serif text-base tracking-[0.15em] uppercase hover:opacity-70 transition-opacity"
           >
             Dori
@@ -111,6 +112,7 @@ export async function SiteHeader() {
         {/* Centered wordmark */}
         <Link
           href="/"
+          aria-label="Dori Jaipur"
           className="font-serif text-xl tracking-[0.1em] uppercase hover:opacity-70 transition-opacity shrink-0 px-8"
         >
           Dori Jaipur

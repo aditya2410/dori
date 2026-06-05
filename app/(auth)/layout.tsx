@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-border/60">
         <div className="container flex h-14 items-center">
-          <Link href="/" className="font-serif text-lg tracking-tight hover:opacity-70 transition-opacity">
+          <Link href="/" aria-label="Dori Jaipur" className="font-serif text-lg tracking-tight hover:opacity-70 transition-opacity">
             DORI
           </Link>
         </div>

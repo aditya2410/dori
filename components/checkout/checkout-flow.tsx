@@ -178,7 +178,7 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
       {/* Minimal header */}
       <header className="pt-4 pb-3">
         <div className="container flex items-center justify-between">
-          <Link href="/" className="font-serif text-lg tracking-tight hover:opacity-70 transition-opacity">
+          <Link href="/" aria-label="Dori Jaipur" className="font-serif text-lg tracking-tight hover:opacity-70 transition-opacity">
             DORI
           </Link>
           <div className="flex flex-col items-center gap-2">

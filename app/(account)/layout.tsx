@@ -32,7 +32,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
             <AccountNav isAdmin={isAdmin} email={user.email ?? ''} />
           </div>
           <div className="flex justify-center">
-            <Link href="/" className="font-serif text-base tracking-[0.15em] uppercase hover:opacity-70 transition-opacity">
+            <Link href="/" aria-label="Dori Jaipur" className="font-serif text-base tracking-[0.15em] uppercase hover:opacity-70 transition-opacity">
               Dori
             </Link>
           </div>
@@ -43,7 +43,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
 
         {/* ── Desktop: Dori | nav links | cart + sign out ── */}
         <div className="hidden md:flex container h-14 items-center justify-between gap-6">
-          <Link href="/" className="font-serif text-lg tracking-[0.15em] uppercase hover:opacity-70 transition-opacity shrink-0">
+          <Link href="/" aria-label="Dori Jaipur" className="font-serif text-lg tracking-[0.15em] uppercase hover:opacity-70 transition-opacity shrink-0">
             Dori
           </Link>
 
