@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Separator } from '@/components/ui/separator'
 
-export const metadata: Metadata = { title: 'Terms & Conditions — Dori Jaipur' }
+export const metadata: Metadata = { alternates: { canonical: '/terms' }, title: 'Terms & Conditions — Dori Jaipur' }
 
 export default function TermsPage() {
   return (

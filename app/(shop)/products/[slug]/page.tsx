@@ -20,7 +20,11 @@ export async function generateMetadata({
     .eq('slug', slug)
     .single()
   if (!data) return {}
-  return { title: data.name, description: data.description ?? undefined }
+  return {
+    alternates: { canonical: `/products/${slug}` },
+    title: data.name,
+    description: data.description ?? undefined,
+  }
 }
 
 export default async function ProductDetailPage({

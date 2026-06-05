@@ -2,7 +2,10 @@ import type { Metadata } from 'next'
 import { createServiceClient } from '@/lib/supabase/server'
 import { ProductCard } from '@/components/shop/product-card'
 
-export const metadata: Metadata = { title: 'Shop' }
+export const metadata: Metadata = {
+  alternates: { canonical: '/products' },
+  title: 'Shop All Bags & Accessories — Dori Jaipur',
+}
 
 export default async function ProductsPage() {
   const { data: products } = await createServiceClient()

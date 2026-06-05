@@ -4,6 +4,7 @@ import { ContactForm } from '@/components/shop/contact-form'
 import { siteConfig } from '@/lib/config'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/contact' },
   title: 'Contact',
   description: 'Get in touch with us. We reply within 24 hours.',
 }

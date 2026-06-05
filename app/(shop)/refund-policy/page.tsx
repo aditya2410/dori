@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Separator } from '@/components/ui/separator'
 
-export const metadata: Metadata = { title: 'Refund Policy — Dori Jaipur' }
+export const metadata: Metadata = { alternates: { canonical: '/refund-policy' }, title: 'Refund Policy — Dori Jaipur' }
 
 export default function RefundPolicyPage() {
   return (

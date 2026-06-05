@@ -28,6 +28,7 @@ export async function generateMetadata({
     .single()
   if (!data) return {}
   return {
+    alternates: { canonical: `/collections/${slug}` },
     title: data.name,
     description: data.description ?? undefined,
     openGraph: {

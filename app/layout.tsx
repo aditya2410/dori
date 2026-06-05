@@ -20,6 +20,7 @@ const SITE_URL = 'https://dorijaipur.in'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  alternates: { canonical: '/' },
   title: {
     default: 'Dori Jaipur — Handcrafted Luxury Accessories',
     template: '%s | Dori Jaipur',

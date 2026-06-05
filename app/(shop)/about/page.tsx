@@ -3,6 +3,7 @@ import Image from 'next/image'
 import aboutImg from '@/public/images/aboutus.jpg'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/about' },
   title: 'About Dori Jaipur — Handcrafted Luxury Bags & Accessories from Jaipur',
   description:
     'Dori Jaipur is a Jaipur-based luxury accessories brand. We handcraft pearl bags, beaded clutches, crystal handbags, embroidered shirts and artisan keychains — made slowly, by skilled artisans in Jaipur, India.',

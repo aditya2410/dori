@@ -5,6 +5,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { BLUR_PLACEHOLDER } from '@/lib/utils'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/collections' },
   title: 'Collections',
   description: 'Explore our handcrafted collections, made in Jaipur.',
 }
