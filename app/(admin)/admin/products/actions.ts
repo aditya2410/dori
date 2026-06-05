@@ -152,11 +152,17 @@ export async function updateProduct(
   redirect('/admin/products')
 }
 
+function pingSitemap() {
+  fetch('https://www.google.com/ping?sitemap=https://dorijaipur.in/sitemap.xml').catch(() => {})
+}
+
 export async function toggleProductActive(productId: string, newActive: boolean): Promise<void> {
   const supabase = createServiceClient()
   await supabase.from('products').update({ is_active: newActive }).eq('id', productId)
   revalidatePath('/admin/products')
   revalidatePath('/products')
+  revalidatePath('/')
+  pingSitemap()
 }
 
 export async function deleteProduct(productId: string): Promise<void> {
@@ -166,4 +172,5 @@ export async function deleteProduct(productId: string): Promise<void> {
   revalidatePath('/admin/products')
   revalidatePath('/products')
   revalidatePath('/')
+  pingSitemap()
 }
