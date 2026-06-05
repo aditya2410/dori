@@ -66,15 +66,20 @@
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://dorijaipur.in/collections/tote-bags</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
 
-  <!-- Products -->
+  <!-- Products (active only) -->
   <url>
     <loc>https://dorijaipur.in/products/white-pearl-handbag</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dorijaipur.in/products/mini-green</loc>
+    <loc>https://dorijaipur.in/products/cherry-bliss</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -84,7 +89,22 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dorijaipur.in/products/mini-black</loc>
+    <loc>https://dorijaipur.in/products/brown</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dorijaipur.in/products/midnight</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dorijaipur.in/products/mini-midnight</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dorijaipur.in/products/mini-bottle-green</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -99,42 +119,22 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dorijaipur.in/products/brown</loc>
+    <loc>https://dorijaipur.in/products/potli-bag</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dorijaipur.in/products/black</loc>
+    <loc>https://dorijaipur.in/products/crescent-moon</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dorijaipur.in/products/cherry-bliss</loc>
+    <loc>https://dorijaipur.in/products/moon</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dorijaipur.in/products/hand-stitched-leather-journal</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://dorijaipur.in/products/silk-hand-painted-scarf</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://dorijaipur.in/products/handthrown-ceramic-mug-set</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://dorijaipur.in/products/stonewashed-linen-cushion-cover</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://dorijaipur.in/products/solid-brass-taper-holder</loc>
+    <loc>https://dorijaipur.in/products/pearl-potli</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
