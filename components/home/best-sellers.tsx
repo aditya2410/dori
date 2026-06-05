@@ -26,8 +26,7 @@ export async function BestSellers() {
         </div>
       </div>
 
-      {/* Full-bleed carousel — no container padding so cards reach the edge */}
-      <div className="pl-[max(1rem,calc((100vw-1400px)/2+2rem))]">
+      <div className="container">
         <BestSellersCarousel products={bestsellers} />
       </div>
     </section>
