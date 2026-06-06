@@ -175,21 +175,17 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
 
   return (
     <div className="min-h-screen">
-      {/* Minimal header */}
-      <header className="pt-4 pb-3">
-        <div className="container flex items-center justify-between">
-          <Link href="/" aria-label="Dori Jaipur" className="font-serif text-base tracking-[0.15em] uppercase hover:opacity-70 transition-opacity">
+      {/* Header */}
+      <header className="border-b border-border/60 py-5">
+        <div className="container flex flex-col items-center gap-3">
+          <Link href="/" aria-label="Dori Jaipur" className="font-serif text-xl tracking-[0.2em] uppercase hover:opacity-70 transition-opacity">
             Dori Jaipur
           </Link>
-          <div className="flex flex-col items-center gap-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className={step === 'address' ? 'text-foreground font-medium' : ''}>Address</span>
-              <span>›</span>
-              <span className={step === 'review' ? 'text-foreground font-medium' : ''}>Review</span>
-            </div>
-            <div className="h-px w-10 bg-border" />
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className={step === 'address' ? 'text-foreground font-medium' : ''}>Address</span>
+            <span>›</span>
+            <span className={step === 'review' ? 'text-foreground font-medium' : ''}>Review</span>
           </div>
-          <div className="w-16" />
         </div>
       </header>
 
