@@ -39,7 +39,7 @@ export async function SiteHeader() {
           </Link>
         </div>
 
-        <div className="flex justify-end items-center gap-0.5 -mr-2">
+        <div className="flex justify-end items-center gap-0.5 -mr-3">
           <CartIcon />
           {user ? (
             <Button variant="ghost" size="icon" asChild>
