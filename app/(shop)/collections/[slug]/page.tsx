@@ -3,6 +3,7 @@ import Image from 'next/image'
 import type { Metadata } from 'next'
 import { createServiceClient } from '@/lib/supabase/server'
 import { ProductCard } from '@/components/shop/product-card'
+import { LoopingVideo } from '@/components/shop/looping-video'
 import { BLUR_PLACEHOLDER } from '@/lib/utils'
 
 export const revalidate = 3600
@@ -84,12 +85,8 @@ export default async function CollectionDetailPage({
       {/* Hero — video takes priority over cover image */}
       <section className="relative w-full h-[50vh] md:h-[65vh] overflow-hidden">
         {series.video_url ? (
-          <video
+          <LoopingVideo
             src={series.video_url}
-            autoPlay
-            muted
-            loop
-            playsInline
             className="absolute inset-0 w-full h-full object-cover"
           />
         ) : series.cover_image_url ? (
