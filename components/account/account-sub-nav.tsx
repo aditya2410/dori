@@ -16,9 +16,11 @@ export function AccountSubNav() {
 
         <Link
           href="/"
+          aria-label="Dori Jaipur"
           className="font-serif text-base tracking-[0.15em] uppercase hover:opacity-70 transition-opacity"
         >
-          Dori
+          <span className="hidden sm:inline">Dori Jaipur</span>
+          <span className="sm:hidden">Dori</span>
         </Link>
 
         <CartIcon />

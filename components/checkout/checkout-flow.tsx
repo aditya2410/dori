@@ -178,8 +178,9 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
       {/* Minimal header */}
       <header className="pt-4 pb-3">
         <div className="container flex items-center justify-between">
-          <Link href="/" aria-label="Dori Jaipur" className="font-serif text-lg tracking-tight hover:opacity-70 transition-opacity">
-            DORI
+          <Link href="/" aria-label="Dori Jaipur" className="font-serif text-base tracking-[0.15em] uppercase hover:opacity-70 transition-opacity">
+            <span className="hidden sm:inline">Dori Jaipur</span>
+            <span className="sm:hidden">Dori</span>
           </Link>
           <div className="flex flex-col items-center gap-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
