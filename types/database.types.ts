@@ -114,6 +114,7 @@ export interface Database {
           description: string | null
           price_paise: number
           images: Json
+          video_url: string | null
           stock: number
           is_active: boolean
           is_bestseller: boolean
@@ -127,6 +128,7 @@ export interface Database {
           description?: string | null
           price_paise: number
           images?: Json
+          video_url?: string | null
           stock?: number
           is_active?: boolean
           is_bestseller?: boolean
@@ -140,6 +142,7 @@ export interface Database {
           description?: string | null
           price_paise?: number
           images?: Json
+          video_url?: string | null
           stock?: number
           is_active?: boolean
           is_bestseller?: boolean
@@ -155,6 +158,7 @@ export interface Database {
           name: string
           description: string | null
           cover_image_url: string | null
+          video_url: string | null
           image_position: 'top' | 'center' | 'bottom' | 'left' | 'right'
           display_order: number
           is_active: boolean
@@ -167,6 +171,7 @@ export interface Database {
           name: string
           description?: string | null
           cover_image_url?: string | null
+          video_url?: string | null
           image_position?: 'top' | 'center' | 'bottom' | 'left' | 'right'
           display_order?: number
           is_active?: boolean
@@ -179,6 +184,7 @@ export interface Database {
           name?: string
           description?: string | null
           cover_image_url?: string | null
+          video_url?: string | null
           image_position?: 'top' | 'center' | 'bottom' | 'left' | 'right'
           display_order?: number
           is_active?: boolean

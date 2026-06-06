@@ -76,6 +76,7 @@ export async function createProduct(
       stock: parsed.data.stock,
       is_active: formData.get('is_active') === 'on',
       images: parseImages(parsed.data.images),
+      video_url: (formData.get('video_url') as string) || null,
       is_bestseller: isBestseller,
         bestseller_order: isBestseller
         ? (parseInt(formData.get('bestseller_order') as string, 10) || null)
@@ -129,6 +130,7 @@ export async function updateProduct(
       stock: parsed.data.stock,
       is_active: formData.get('is_active') === 'on',
       images: parseImages(parsed.data.images),
+      video_url: (formData.get('video_url') as string) || null,
       is_bestseller: isBestseller,
         bestseller_order: isBestseller
         ? (parseInt(formData.get('bestseller_order') as string, 10) || null)

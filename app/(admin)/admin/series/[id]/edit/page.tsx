@@ -16,7 +16,7 @@ export default async function EditSeriesPage({
   const { id } = await params
   const { data: series } = await createServiceClient()
     .from('series')
-    .select('id, name, slug, description, cover_image_url, image_position, display_order, is_active')
+    .select('id, name, slug, description, cover_image_url, video_url, image_position, display_order, is_active')
     .eq('id', id)
     .single()
 

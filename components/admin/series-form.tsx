@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ImageUploader } from './image-uploader'
+import { VideoUploader } from './video-uploader'
 import { toSlug } from '@/lib/utils'
 
 type ImagePosition = 'top' | 'center' | 'bottom' | 'left' | 'right'
@@ -31,6 +32,7 @@ interface Series {
   slug: string
   description: string | null
   cover_image_url: string | null
+  video_url: string | null
   image_position: ImagePosition
   display_order: number
   is_active: boolean
@@ -54,6 +56,7 @@ export function SeriesForm({ series }: SeriesFormProps) {
   const [coverImages, setCoverImages] = useState<string[]>(
     series?.cover_image_url ? [series.cover_image_url] : [],
   )
+  const [videoUrl, setVideoUrl] = useState<string | null>(series?.video_url ?? null)
   const [nameValue, setNameValue] = useState(series?.name ?? '')
   const [slugValue, setSlugValue] = useState(series?.slug ?? '')
   const [slugTouched, setSlugTouched] = useState(isEdit)
@@ -73,8 +76,8 @@ export function SeriesForm({ series }: SeriesFormProps) {
 
   return (
     <form action={formAction} className="space-y-8 max-w-2xl">
-      {/* Cover image is stored as a single URL; ImageUploader manages the array */}
       <input type="hidden" name="cover_image_url" value={coverImages[0] ?? ''} />
+      <input type="hidden" name="video_url" value={videoUrl ?? ''} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-1.5">
@@ -145,6 +148,12 @@ export function SeriesForm({ series }: SeriesFormProps) {
         <Label>Cover image</Label>
         <ImageUploader existingImages={coverImages} onChange={setCoverImages} />
         <p className="text-xs text-muted-foreground">Used as hero image on the collection page. Only the first image is used.</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Collection video</Label>
+        <p className="text-xs text-muted-foreground">Optional ambient video shown as the collection hero.</p>
+        <VideoUploader existingUrl={videoUrl} onChange={setVideoUrl} />
       </div>
 
       {/* Image position — controls which part of the image is visible when cropped */}

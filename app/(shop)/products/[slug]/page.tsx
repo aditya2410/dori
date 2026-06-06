@@ -48,8 +48,18 @@ export default async function ProductDetailPage({
   return (
     <div className="container py-8 md:py-16">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-20">
-        {/* Image gallery */}
-        <ImageGallery images={images} productName={product.name} />
+        {/* Video (if uploaded) then images */}
+        <div className="space-y-3">
+          {product.video_url && (
+            <video
+              src={product.video_url}
+              controls
+              playsInline
+              className="w-full aspect-[3/4] object-cover bg-secondary"
+            />
+          )}
+          <ImageGallery images={images} productName={product.name} />
+        </div>
 
         {/* Product info */}
         <div className="flex flex-col gap-6 md:pt-4">

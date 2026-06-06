@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ImageUploader } from './image-uploader'
+import { VideoUploader } from './video-uploader'
 import { RichTextEditor } from './rich-text-editor'
 import { toSlug } from '@/lib/utils'
 
@@ -26,6 +27,7 @@ interface Product {
   is_bestseller: boolean
   bestseller_order: number | null
   images: unknown
+  video_url: string | null
 }
 
 interface SeriesOption {
@@ -53,6 +55,7 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
   const [imageUrls, setImageUrls] = useState<string[]>(
     Array.isArray(product?.images) ? (product.images as string[]) : [],
   )
+  const [videoUrl, setVideoUrl] = useState<string | null>(product?.video_url ?? null)
   const [description, setDescription] = useState(product?.description ?? '')
   const [nameValue, setNameValue] = useState(product?.name ?? '')
   const [slugValue, setSlugValue] = useState(product?.slug ?? '')
@@ -76,6 +79,7 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
   return (
     <form action={formAction} className="space-y-8 max-w-2xl">
       <input type="hidden" name="images" value={JSON.stringify(imageUrls)} />
+      <input type="hidden" name="video_url" value={videoUrl ?? ''} />
       <input type="hidden" name="description" value={description} />
       {/* Convert sentinel back to empty string so the action receives '' for "no series" */}
       <input type="hidden" name="series_id" value={seriesId === NONE ? '' : seriesId} />
@@ -212,6 +216,12 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
       <div className="space-y-2">
         <Label>Images</Label>
         <ImageUploader existingImages={imageUrls} onChange={setImageUrls} />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Video</Label>
+        <p className="text-xs text-muted-foreground">Optional product video shown on the product page.</p>
+        <VideoUploader existingUrl={videoUrl} onChange={setVideoUrl} />
       </div>
 
       {state && 'error' in state && (

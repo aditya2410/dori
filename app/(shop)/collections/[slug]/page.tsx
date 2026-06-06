@@ -49,7 +49,7 @@ export default async function CollectionDetailPage({
 
   const { data: series } = await supabase
     .from('series')
-    .select('id, name, description, cover_image_url, image_position')
+    .select('id, name, description, cover_image_url, video_url, image_position')
     .eq('slug', slug)
     .eq('is_active', true)
     .single()
@@ -77,31 +77,40 @@ export default async function CollectionDetailPage({
 
   return (
     <>
-      {/* Hero */}
+      {/* Hero — video takes priority over cover image */}
       <section className="relative w-full h-[50vh] md:h-[65vh] overflow-hidden">
-        {series.cover_image_url ? (
-          <>
-            <Image
-              src={series.cover_image_url}
-              alt={series.name}
-              fill
-              sizes="100vw"
-              priority
-              placeholder="blur"
-              blurDataURL={BLUR_PLACEHOLDER}
-              className={`object-cover object-${series.image_position ?? 'center'}`}
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
-          </>
+        {series.video_url ? (
+          <video
+            src={series.video_url}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : series.cover_image_url ? (
+          <Image
+            src={series.cover_image_url}
+            alt={series.name}
+            fill
+            sizes="100vw"
+            priority
+            placeholder="blur"
+            blurDataURL={BLUR_PLACEHOLDER}
+            className={`object-cover object-${series.image_position ?? 'center'}`}
+          />
         ) : (
           <div className="h-full bg-secondary" />
         )}
+        {(series.video_url || series.cover_image_url) && (
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
+        )}
         <div className="absolute inset-0 flex flex-col items-center justify-end pb-12 md:pb-16 px-6 text-center">
-          <h1 className={`font-serif text-4xl md:text-6xl font-light tracking-tight ${series.cover_image_url ? 'text-white' : 'text-foreground'}`}>
+          <h1 className={`font-serif text-4xl md:text-6xl font-light tracking-tight ${(series.video_url || series.cover_image_url) ? 'text-white' : 'text-foreground'}`}>
             {series.name}
           </h1>
           {series.description && (
-            <p className={`font-sans text-sm md:text-base mt-3 max-w-md leading-relaxed ${series.cover_image_url ? 'text-white/90' : 'text-muted-foreground'}`}>
+            <p className={`font-sans text-sm md:text-base mt-3 max-w-md leading-relaxed ${(series.video_url || series.cover_image_url) ? 'text-white/90' : 'text-muted-foreground'}`}>
               {series.description}
             </p>
           )}
