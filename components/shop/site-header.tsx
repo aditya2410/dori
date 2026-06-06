@@ -33,9 +33,9 @@ export async function SiteHeader() {
           <Link
             href="/"
             aria-label="Dori Jaipur"
-            className="font-serif text-base tracking-[0.15em] uppercase hover:opacity-70 transition-opacity"
+            className="font-serif text-sm tracking-[0.15em] uppercase hover:opacity-70 transition-opacity"
           >
-            Dori
+            Dori Jaipur
           </Link>
         </div>
 
