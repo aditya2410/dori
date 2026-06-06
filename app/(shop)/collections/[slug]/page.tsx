@@ -56,11 +56,12 @@ export default async function CollectionDetailPage({
 
   if (!series) notFound()
 
-  // Fetch products in this series via the junction table
+  // Fetch products ordered by the admin-defined display_order
   const { data: productSeriesRows } = await supabase
     .from('product_series')
-    .select('product_id')
+    .select('product_id, display_order')
     .eq('series_id', series.id)
+    .order('display_order', { ascending: true })
 
   const productIds = (productSeriesRows ?? []).map((r) => r.product_id)
 
@@ -71,8 +72,11 @@ export default async function CollectionDetailPage({
           .select('id, slug, name, price_paise, images')
           .in('id', productIds)
           .eq('is_active', true)
-          .order('created_at', { ascending: false })
-          .then((r) => r.data ?? [])
+          .then(({ data }) => {
+            // Preserve the display_order from product_series
+            const map = Object.fromEntries((data ?? []).map((p) => [p.id, p]))
+            return productIds.map((pid) => map[pid]).filter(Boolean)
+          })
       : []
 
   return (

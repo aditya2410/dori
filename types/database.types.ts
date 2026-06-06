@@ -230,14 +230,17 @@ export interface Database {
         Row: {
           product_id: string
           series_id: string
+          display_order: number
         }
         Insert: {
           product_id: string
           series_id: string
+          display_order?: number
         }
         Update: {
           product_id?: string
           series_id?: string
+          display_order?: number
         }
         Relationships: []
       }

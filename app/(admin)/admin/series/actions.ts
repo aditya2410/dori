@@ -117,6 +117,20 @@ export async function deleteSeries(seriesId: string): Promise<{ error?: string }
   return {}
 }
 
+export async function updateProductOrder(seriesId: string, orderedProductIds: string[]): Promise<void> {
+  const supabase = createServiceClient()
+  await Promise.all(
+    orderedProductIds.map((productId, index) =>
+      supabase
+        .from('product_series')
+        .update({ display_order: index })
+        .eq('series_id', seriesId)
+        .eq('product_id', productId),
+    ),
+  )
+  revalidatePath(`/collections`)
+}
+
 function revalidatePaths() {
   revalidatePath('/admin/series')
   revalidatePath('/collections')
