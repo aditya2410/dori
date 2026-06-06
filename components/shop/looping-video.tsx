@@ -14,14 +14,33 @@ export function LoopingVideo({ src, className }: LoopingVideoProps) {
     const video = ref.current
     if (!video) return
 
-    function resume() {
-      if (!document.hidden && video) {
-        video.play().catch(() => {})
-      }
+    function play() {
+      video?.play().catch(() => {})
     }
 
-    document.addEventListener('visibilitychange', resume)
-    return () => document.removeEventListener('visibilitychange', resume)
+    // Any pause on a controls-free looping video is unintentional (background, call, etc.)
+    // Wait 300ms so we don't fight a legitimate browser pause, then resume if still paused
+    function handlePause() {
+      setTimeout(() => {
+        if (video && video.paused) play()
+      }, 300)
+    }
+
+    function handleVisibility() {
+      if (!document.hidden) play()
+    }
+
+    video.addEventListener('pause', handlePause)
+    document.addEventListener('visibilitychange', handleVisibility)
+    window.addEventListener('pageshow', play)
+    window.addEventListener('focus', play)
+
+    return () => {
+      video.removeEventListener('pause', handlePause)
+      document.removeEventListener('visibilitychange', handleVisibility)
+      window.removeEventListener('pageshow', play)
+      window.removeEventListener('focus', play)
+    }
   }, [])
 
   return (
