@@ -6,7 +6,7 @@ interface Photo { id: string; url: string }
 
 const PHOTO_SIZE = 280   // px — width = height (square)
 const PHOTO_GAP  = 16    // px between photos
-const SPEED      = 0.5   // px per frame ≈ 30px/sec at 60fps
+const SPEED      = 1     // px per frame ≈ 60px/sec at 60fps
 
 export function CommunityBanner({ photos }: { photos: Photo[] }) {
   const stripRef = useRef<HTMLDivElement>(null)
