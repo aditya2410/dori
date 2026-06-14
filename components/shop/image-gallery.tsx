@@ -15,10 +15,11 @@ const MAX_SCALE    = 4
 const SNAP_THRESHOLD = 1.15   // below this, snap back to 1
 
 // ── helpers ───────────────────────────────────────────────────
-function dist(t1: Touch, t2: Touch) {
+type Pt = { clientX: number; clientY: number }
+function dist(t1: Pt, t2: Pt) {
   return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY)
 }
-function mid(t1: Touch, t2: Touch) {
+function mid(t1: Pt, t2: Pt) {
   return { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 }
 }
 function clamp(v: number, min: number, max: number) {
