@@ -193,6 +193,30 @@ export interface Database {
         }
         Relationships: []
       }
+      community_photos: {
+        Row: {
+          id: string
+          url: string
+          display_order: number
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          url: string
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          url?: string
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           id: string
