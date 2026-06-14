@@ -9,123 +9,240 @@ interface ImageGalleryProps {
   productName: string
 }
 
-const SNAP_EASING = 'transform 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-const ZOOM_SCALE  = 2.5
+const SNAP_EASING  = 'transform 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+const ZOOM_SNAP    = 'transform 0.3s ease'
+const MAX_SCALE    = 4
+const SNAP_THRESHOLD = 1.15   // below this, snap back to 1
+
+// ── helpers ───────────────────────────────────────────────────
+function dist(t1: Touch, t2: Touch) {
+  return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY)
+}
+function mid(t1: Touch, t2: Touch) {
+  return { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 }
+}
+function clamp(v: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, v))
+}
 
 export function ImageGallery({ images, productName }: ImageGalleryProps) {
-  const [active, setActive]     = useState(0)
-  const [zoomed, setZoomed]     = useState(false)
-  const [origin, setOrigin]     = useState({ x: 50, y: 50 })
+  const [active, setActive]   = useState(0)
+  const [isZoomed, setIsZoomed] = useState(false)
 
-  const stripRef    = useRef<HTMLDivElement>(null)
-  const activeRef   = useRef(0)
-  const posRef      = useRef(0)
-  const touchStartX = useRef<number | null>(null)
-  const touchStartY = useRef<number | null>(null)
-  const isHoriz     = useRef<boolean | null>(null)
+  // Strip refs (swipe between images)
+  const stripRef  = useRef<HTMLDivElement>(null)
+  const activeRef = useRef(0)
+  const posRef    = useRef(0)
 
-  function containerWidth() {
-    return stripRef.current?.parentElement?.clientWidth ?? 0
+  // Zoom refs (pinch / pan state — all via refs for 60fps)
+  const zoomRef   = useRef<HTMLImageElement>(null)
+  const scaleRef  = useRef(1)
+  const panXRef   = useRef(0)
+  const panYRef   = useRef(0)
+  const animRef   = useRef(false)
+
+  // Touch tracking
+  const touch1    = useRef<Touch | null>(null)
+  const touch2    = useRef<Touch | null>(null)
+  const startDist = useRef(0)
+  const startScale = useRef(1)
+  const startPanX = useRef(0)
+  const startPanY = useRef(0)
+  const startMid  = useRef({ x: 0, y: 0 })
+  const swipeStartX = useRef<number | null>(null)
+  const swipeStartY = useRef<number | null>(null)
+  const isHoriz   = useRef<boolean | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  function containerSize() {
+    const el = containerRef.current
+    return el ? { w: el.clientWidth, h: el.clientHeight } : { w: 0, h: 0 }
   }
 
-  function applyPos(p: number) {
-    const max = (images.length - 1) * containerWidth()
-    posRef.current = Math.max(0, Math.min(max, p))
+  // Apply zoom transform directly to the overlay image
+  function applyZoom(s: number, tx: number, ty: number, animated = false) {
+    const el = zoomRef.current
+    if (!el) return
+    el.style.transition = animated ? ZOOM_SNAP : 'none'
+    el.style.transform  = `translate(${tx}px, ${ty}px) scale(${s})`
+    scaleRef.current = s
+    panXRef.current  = tx
+    panYRef.current  = ty
+  }
+
+  function clampPan(s: number, tx: number, ty: number) {
+    const { w, h } = containerSize()
+    return {
+      tx: clamp(tx, w * (1 - s), 0),
+      ty: clamp(ty, h * (1 - s), 0),
+    }
+  }
+
+  function snapBack() {
+    const { tx, ty } = clampPan(1, 0, 0)
+    applyZoom(1, tx, ty, true)
+    setTimeout(() => setIsZoomed(false), 300)
+  }
+
+  // ── Strip swipe (when not zoomed) ─────────────────────────
+  function cw() { return stripRef.current?.parentElement?.clientWidth ?? 0 }
+
+  function applyStrip(p: number) {
+    const max = (images.length - 1) * cw()
+    posRef.current = clamp(p, 0, max)
     if (stripRef.current) {
-      stripRef.current.style.transition = 'transform 0ms'
+      stripRef.current.style.transition = 'none'
       stripRef.current.style.transform  = `translateX(-${posRef.current}px)`
     }
   }
 
-  function snapTo(idx: number) {
-    const el = stripRef.current
-    if (!el) return
-    const cw = containerWidth()
-    posRef.current    = idx * cw
+  function snapStrip(idx: number) {
+    const el = stripRef.current; if (!el) return
+    const w = cw()
+    posRef.current    = idx * w
     activeRef.current = idx
     setActive(idx)
-    setZoomed(false)
     requestAnimationFrame(() => {
       el.style.transition = SNAP_EASING
-      el.style.transform  = `translateX(-${idx * cw}px)`
+      el.style.transform  = `translateX(-${idx * w}px)`
     })
   }
 
+  // ── Touch handler ──────────────────────────────────────────
   function onTouchStart(e: React.TouchEvent) {
-    if (zoomed) return          // let zoom handle its own touch
-    touchStartX.current = e.touches[0].clientX
-    touchStartY.current = e.touches[0].clientY
-    isHoriz.current = null
+    const touches = e.touches
+
+    if (touches.length === 2) {
+      // Begin pinch
+      touch1.current = touches[0]
+      touch2.current = touches[1]
+      startDist.current  = dist(touches[0], touches[1])
+      startScale.current = scaleRef.current
+      startPanX.current  = panXRef.current
+      startPanY.current  = panYRef.current
+      const m = mid(touches[0], touches[1])
+      const rect = containerRef.current!.getBoundingClientRect()
+      startMid.current = { x: m.x - rect.left, y: m.y - rect.top }
+      if (!isZoomed) setIsZoomed(true)
+      return
+    }
+
+    if (touches.length === 1) {
+      if (isZoomed) {
+        // Begin pan
+        startPanX.current = panXRef.current
+        startPanY.current = panYRef.current
+        swipeStartX.current = touches[0].clientX
+        swipeStartY.current = touches[0].clientY
+      } else {
+        // Begin swipe
+        swipeStartX.current = touches[0].clientX
+        swipeStartY.current = touches[0].clientY
+        isHoriz.current = null
+      }
+    }
   }
 
   function onTouchMove(e: React.TouchEvent) {
-    if (zoomed || touchStartX.current === null || touchStartY.current === null) return
-    const dx = e.touches[0].clientX - touchStartX.current
-    const dy = e.touches[0].clientY - touchStartY.current
-    if (isHoriz.current === null && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
-      isHoriz.current = Math.abs(dx) > Math.abs(dy)
+    const touches = e.touches
+
+    if (touches.length === 2 && startDist.current > 0) {
+      e.preventDefault()
+      const newDist  = dist(touches[0], touches[1])
+      const newScale = clamp(startScale.current * (newDist / startDist.current), 1, MAX_SCALE)
+      const rect     = containerRef.current!.getBoundingClientRect()
+      const m        = mid(touches[0], touches[1])
+      const cx       = m.x - rect.left
+      const cy       = m.y - rect.top
+      const ratio    = newScale / startScale.current
+
+      // Keep pinch midpoint stationary (transform-origin 0,0 math)
+      let tx = cx - (startMid.current.x - startPanX.current) * ratio
+      let ty = cy - (startMid.current.y - startPanY.current) * ratio
+      ;({ tx, ty } = clampPan(newScale, tx, ty))
+      applyZoom(newScale, tx, ty)
+      return
     }
-    if (!isHoriz.current) return
-    const atStart = activeRef.current === 0 && dx > 0
-    const atEnd   = activeRef.current === images.length - 1 && dx < 0
-    if (!atStart && !atEnd) applyPos(activeRef.current * containerWidth() - dx)
+
+    if (touches.length === 1) {
+      const dx = touches[0].clientX - (swipeStartX.current ?? touches[0].clientX)
+      const dy = touches[0].clientY - (swipeStartY.current ?? touches[0].clientY)
+
+      if (isZoomed) {
+        // Pan the zoomed image
+        const { tx, ty } = clampPan(scaleRef.current, startPanX.current + dx, startPanY.current + dy)
+        applyZoom(scaleRef.current, tx, ty)
+        return
+      }
+
+      // Swipe between images
+      if (isHoriz.current === null && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
+        isHoriz.current = Math.abs(dx) > Math.abs(dy)
+      }
+      if (!isHoriz.current) return
+      const cur = activeRef.current
+      const atStart = cur === 0 && dx > 0
+      const atEnd   = cur === images.length - 1 && dx < 0
+      if (!atStart && !atEnd) applyStrip(cur * cw() - dx)
+    }
   }
 
   function onTouchEnd(e: React.TouchEvent) {
-    if (zoomed || touchStartX.current === null || !isHoriz.current) return
-    const delta = e.changedTouches[0].clientX - touchStartX.current
-    touchStartX.current = null
-    if (Math.abs(delta) < 40) { snapTo(activeRef.current); return }
+    // Pinch end
+    if (touch2.current) {
+      touch1.current = null
+      touch2.current = null
+      startDist.current = 0
+      if (scaleRef.current < SNAP_THRESHOLD) {
+        snapBack()
+      }
+      return
+    }
+
+    if (isZoomed) return   // pan end — nothing to do
+
+    // Swipe end
+    if (swipeStartX.current === null || !isHoriz.current) {
+      swipeStartX.current = null
+      return
+    }
+    const delta = e.changedTouches[0].clientX - swipeStartX.current
+    swipeStartX.current = null
+    if (Math.abs(delta) < 40) { snapStrip(activeRef.current); return }
     const next = delta < 0
       ? Math.min(activeRef.current + 1, images.length - 1)
       : Math.max(activeRef.current - 1, 0)
-    snapTo(next)
+    snapStrip(next)
     isHoriz.current = null
   }
 
-  // Desktop: click to zoom/unzoom, mousemove to pan
+  // ── Desktop: click to zoom/unzoom, mousemove to pan ───────
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (isZoomed) { snapBack(); return }
     const rect = e.currentTarget.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width)  * 100
-    const y = ((e.clientY - rect.top)  / rect.height) * 100
-    if (!zoomed) {
-      setOrigin({ x, y })
-      setZoomed(true)
-    } else {
-      setZoomed(false)
-    }
+    const cx = e.clientX - rect.left
+    const cy = e.clientY - rect.top
+    const s  = 2.5
+    const { tx, ty } = clampPan(s, -cx * (s - 1), -cy * (s - 1))
+    setIsZoomed(true)
+    requestAnimationFrame(() => applyZoom(s, tx, ty, true))
   }
 
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
-    if (!zoomed) return
+    if (!isZoomed) return
     const rect = e.currentTarget.getBoundingClientRect()
-    setOrigin({
-      x: ((e.clientX - rect.left) / rect.width)  * 100,
-      y: ((e.clientY - rect.top)  / rect.height) * 100,
-    })
+    const cx = e.clientX - rect.left
+    const cy = e.clientY - rect.top
+    const s  = scaleRef.current
+    const { tx, ty } = clampPan(s, -cx * (s - 1), -cy * (s - 1))
+    applyZoom(s, tx, ty)
   }
 
-  // Mobile tap: zoom in at tap point, tap again to exit
-  function handleZoomTap(e: React.TouchEvent<HTMLDivElement>) {
-    if (!zoomed) {
-      const rect = e.currentTarget.getBoundingClientRect()
-      const t = e.changedTouches[0]
-      setOrigin({
-        x: ((t.clientX - rect.left) / rect.width)  * 100,
-        y: ((t.clientY - rect.top)  / rect.height) * 100,
-      })
-      setZoomed(true)
-    } else {
-      setZoomed(false)
-    }
-  }
-
-  // Escape to close zoom
   useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setZoomed(false) }
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape' && isZoomed) snapBack() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [isZoomed])
 
   if (images.length === 0) {
     return (
@@ -137,27 +254,27 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
 
   return (
     <div className="space-y-3">
-      {/* Main frame */}
       <div
+        ref={containerRef}
         className="aspect-[3/4] bg-secondary overflow-hidden relative"
         style={{
-          touchAction: zoomed ? 'none' : 'pan-y',
-          cursor: zoomed ? 'zoom-out' : 'zoom-in',
+          touchAction: isZoomed ? 'none' : 'pan-y',
+          cursor: isZoomed ? 'zoom-out' : 'zoom-in',
         }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
-        onTouchEnd={zoomed ? handleZoomTap : onTouchEnd}
+        onTouchEnd={onTouchEnd}
         onClick={handleClick}
         onMouseMove={handleMouseMove}
       >
-        {/* Scrolling strip (hidden under zoom overlay when zoomed) */}
+        {/* Swipeable strip (hidden while zoomed) */}
         <div
           ref={stripRef}
           className="flex h-full"
           style={{
             width: `${images.length * 100}%`,
             willChange: 'transform',
-            visibility: zoomed ? 'hidden' : 'visible',
+            visibility: isZoomed ? 'hidden' : 'visible',
           }}
         >
           {images.map((url, i) => (
@@ -176,39 +293,33 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
           ))}
         </div>
 
-        {/* In-place zoom overlay — same frame, no modal */}
-        {zoomed && (
+        {/* Zoom overlay — same frame, transform-origin 0 0 */}
+        {isZoomed && (
           <div className="absolute inset-0 overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              ref={zoomRef}
               src={images[active]}
               alt={productName}
-              className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
               draggable={false}
-              style={{
-                transform: `scale(${ZOOM_SCALE})`,
-                transformOrigin: `${origin.x}% ${origin.y}%`,
-                transition: 'transform-origin 0.05s linear',
-              }}
+              className="absolute top-0 left-0 w-full h-full object-cover select-none pointer-events-none"
+              style={{ transformOrigin: '0 0' }}
             />
           </div>
         )}
 
-        {/* Dot indicators — mobile, only when not zoomed */}
-        {images.length > 1 && !zoomed && (
+        {/* Dots — mobile, not zoomed */}
+        {images.length > 1 && !isZoomed && (
           <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 md:hidden pointer-events-none">
             {images.map((_, i) => (
-              <span
-                key={i}
-                className={`size-1.5 rounded-full transition-colors duration-200 ${i === active ? 'bg-white' : 'bg-white/40'}`}
-              />
+              <span key={i} className={`size-1.5 rounded-full transition-colors duration-200 ${i === active ? 'bg-white' : 'bg-white/40'}`} />
             ))}
           </div>
         )}
 
         {/* Zoom hint — desktop */}
-        {!zoomed && (
-          <div className="absolute bottom-3 right-3 hidden md:flex items-center gap-1 bg-background/60 text-xs px-2 py-1 opacity-0 hover:opacity-0 group-hover:opacity-100 pointer-events-none select-none">
+        {!isZoomed && (
+          <div className="absolute bottom-3 right-3 hidden md:block bg-background/60 text-xs px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none select-none">
             Click to zoom
           </div>
         )}
@@ -221,11 +332,9 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
             <button
               key={url}
               type="button"
-              onClick={() => snapTo(i)}
+              onClick={() => snapStrip(i)}
               aria-label={`View image ${i + 1}`}
-              className={`aspect-square bg-secondary overflow-hidden relative border-2 transition-colors ${
-                active === i ? 'border-foreground' : 'border-transparent hover:border-foreground/30'
-              }`}
+              className={`aspect-square bg-secondary overflow-hidden relative border-2 transition-colors ${active === i ? 'border-foreground' : 'border-transparent hover:border-foreground/30'}`}
             >
               <Image
                 src={url}
