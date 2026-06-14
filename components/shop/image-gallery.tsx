@@ -42,8 +42,8 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
   const animRef   = useRef(false)
 
   // Touch tracking
-  const touch1    = useRef<Touch | null>(null)
-  const touch2    = useRef<Touch | null>(null)
+  const touch1    = useRef<{ clientX: number; clientY: number } | null>(null)
+  const touch2    = useRef<{ clientX: number; clientY: number } | null>(null)
   const startDist = useRef(0)
   const startScale = useRef(1)
   const startPanX = useRef(0)
@@ -114,8 +114,8 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
 
     if (touches.length === 2) {
       // Begin pinch
-      touch1.current = touches[0]
-      touch2.current = touches[1]
+      touch1.current = { clientX: touches[0].clientX, clientY: touches[0].clientY }
+      touch2.current = { clientX: touches[1].clientX, clientY: touches[1].clientY }
       startDist.current  = dist(touches[0], touches[1])
       startScale.current = scaleRef.current
       startPanX.current  = panXRef.current
