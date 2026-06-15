@@ -39,10 +39,12 @@ export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl
   const userAgent = request.headers.get('user-agent') ?? ''
 
-  // Skip static assets, API routes, and bots — no session refresh needed
+  // Skip static assets, API routes, bots, and Next.js link prefetches
   if (SKIP_PATHS.some((p) => pathname.startsWith(p) || pathname.endsWith(p)))
     return NextResponse.next()
   if (BOT_PATTERNS.test(userAgent))
+    return NextResponse.next()
+  if (request.headers.get('next-router-prefetch') === '1')
     return NextResponse.next()
 
   const start = Date.now()
