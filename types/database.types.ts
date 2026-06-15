@@ -34,6 +34,42 @@ export interface ShippingAddress {
 export interface Database {
   public: {
     Tables: {
+      visitor_logs: {
+        Row: {
+          id: number
+          request_id: string | null
+          ip: string | null
+          country: string | null
+          city: string | null
+          pathname: string | null
+          user_agent: string | null
+          user_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          request_id?: string | null
+          ip?: string | null
+          country?: string | null
+          city?: string | null
+          pathname?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          request_id?: string | null
+          ip?: string | null
+          country?: string | null
+          city?: string | null
+          pathname?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           id: string
