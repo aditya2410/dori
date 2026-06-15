@@ -40,8 +40,6 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
   const scaleRef  = useRef(1)
   const panXRef   = useRef(0)
   const panYRef   = useRef(0)
-  const animRef   = useRef(false)
-
   // Touch tracking
   const touch1    = useRef<{ clientX: number; clientY: number } | null>(null)
   const touch2    = useRef<{ clientX: number; clientY: number } | null>(null)
@@ -294,20 +292,21 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
           ))}
         </div>
 
-        {/* Zoom overlay — same frame, transform-origin 0 0 */}
-        {isZoomed && (
-          <div className="absolute inset-0 overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              ref={zoomRef}
-              src={images[active]}
-              alt={productName}
-              draggable={false}
-              className="absolute top-0 left-0 w-full h-full object-cover select-none pointer-events-none"
-              style={{ transformOrigin: '0 0' }}
-            />
-          </div>
-        )}
+        {/* Zoom overlay — always mounted so the img stays loaded; hidden when inactive */}
+        <div
+          className="absolute inset-0 overflow-hidden"
+          style={{ visibility: isZoomed ? 'visible' : 'hidden' }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            ref={zoomRef}
+            src={images[active]}
+            alt={productName}
+            draggable={false}
+            className="absolute top-0 left-0 w-full h-full object-cover select-none pointer-events-none"
+            style={{ transformOrigin: '0 0' }}
+          />
+        </div>
 
         {/* Dots — mobile, not zoomed */}
         {images.length > 1 && !isZoomed && (
