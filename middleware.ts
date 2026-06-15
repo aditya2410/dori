@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { type NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse, after } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 import type { Database } from '@/types/database.types'
 
@@ -29,11 +29,10 @@ function log(fields: Record<string, unknown>) {
 }
 
 function insertVisitorLog(fields: Database['public']['Tables']['visitor_logs']['Insert']) {
-  // Fire-and-forget — logging must not delay the response
-  supabaseAdmin
-    .from('visitor_logs')
-    .insert(fields)
-    .then(({ error }) => { if (error) console.error('visitor_log insert failed:', error.message) })
+  after(async () => {
+    const { error } = await supabaseAdmin.from('visitor_logs').insert(fields)
+    if (error) console.error('visitor_log insert failed:', error.message)
+  })
 }
 
 export async function middleware(request: NextRequest) {
