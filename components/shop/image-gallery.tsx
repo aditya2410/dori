@@ -29,6 +29,7 @@ function clamp(v: number, min: number, max: number) {
 export function ImageGallery({ images, productName }: ImageGalleryProps) {
   const [active, setActive]   = useState(0)
   const [isZoomed, setIsZoomed] = useState(false)
+  const isZoomedRef = useRef(false)   // readable from non-passive native handlers
 
   // Strip refs (swipe between images)
   const stripRef  = useRef<HTMLDivElement>(null)
@@ -80,6 +81,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
   function snapBack() {
     const { tx, ty } = clampPan(1, 0, 0)
     applyZoom(1, tx, ty, true)
+    isZoomedRef.current = false
     setTimeout(() => setIsZoomed(false), 300)
   }
 
@@ -122,7 +124,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
       const m = mid(touches[0], touches[1])
       const rect = containerRef.current!.getBoundingClientRect()
       startMid.current = { x: m.x - rect.left, y: m.y - rect.top }
-      if (!isZoomed) setIsZoomed(true)
+      if (!isZoomedRef.current) { isZoomedRef.current = true; setIsZoomed(true) }
       return
     }
 
@@ -223,6 +225,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
     const cy = e.clientY - rect.top
     const s  = 2.5
     const { tx, ty } = clampPan(s, -cx * (s - 1), -cy * (s - 1))
+    isZoomedRef.current = true
     setIsZoomed(true)
     requestAnimationFrame(() => applyZoom(s, tx, ty, true))
   }
@@ -242,6 +245,22 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [isZoomed])
+
+  // Prevent browser viewport pan/zoom during pinch or while zoomed.
+  // Must be non-passive so preventDefault() is honoured.
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    function block(e: TouchEvent) {
+      if (e.touches.length >= 2 || isZoomedRef.current) e.preventDefault()
+    }
+    el.addEventListener('touchstart', block, { passive: false })
+    el.addEventListener('touchmove',  block, { passive: false })
+    return () => {
+      el.removeEventListener('touchstart', block)
+      el.removeEventListener('touchmove',  block)
+    }
+  }, [])
 
   if (images.length === 0) {
     return (
