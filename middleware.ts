@@ -44,7 +44,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   if (BOT_PATTERNS.test(userAgent))
     return NextResponse.next()
-  if (request.headers.get('next-router-prefetch') === '1')
+  if (request.headers.has('next-router-prefetch'))
     return NextResponse.next()
 
   const start = Date.now()
