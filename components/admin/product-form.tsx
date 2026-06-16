@@ -11,8 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ImageUploader } from './image-uploader'
-import { VideoUploader } from './video-uploader'
+import { MediaUploader, type MediaItem } from './media-uploader'
 import { RichTextEditor } from './rich-text-editor'
 import { toSlug } from '@/lib/utils'
 
@@ -28,6 +27,7 @@ interface Product {
   bestseller_order: number | null
   images: unknown
   video_url: string | null
+  video_position: number | null
 }
 
 interface SeriesOption {
@@ -52,10 +52,24 @@ function SubmitButton({ isEdit }: { isEdit: boolean }) {
 
 export function ProductForm({ product, activeSeries = [], currentSeriesId = null }: ProductFormProps) {
   const isEdit = !!product
-  const [imageUrls, setImageUrls] = useState<string[]>(
-    Array.isArray(product?.images) ? (product.images as string[]) : [],
-  )
-  const [videoUrl, setVideoUrl] = useState<string | null>(product?.video_url ?? null)
+
+  // Reconstruct the combined media order from images + video_url + video_position.
+  const initialMedia: MediaItem[] = (() => {
+    const imgs = Array.isArray(product?.images) ? (product.images as string[]) : []
+    const list: MediaItem[] = imgs.map((url) => ({ type: 'image', url }))
+    if (product?.video_url) {
+      const pos = product.video_position ?? list.length
+      list.splice(Math.min(Math.max(pos, 0), list.length), 0, { type: 'video', url: product.video_url })
+    }
+    return list
+  })()
+  const [media, setMedia] = useState<MediaItem[]>(initialMedia)
+
+  // Derived values for submission
+  const imageUrls = media.filter((m) => m.type === 'image').map((m) => m.url)
+  const videoIndex = media.findIndex((m) => m.type === 'video')
+  const videoUrl = videoIndex >= 0 ? media[videoIndex].url : ''
+
   const [description, setDescription] = useState(product?.description ?? '')
   const [nameValue, setNameValue] = useState(product?.name ?? '')
   const [slugValue, setSlugValue] = useState(product?.slug ?? '')
@@ -79,7 +93,8 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
   return (
     <form action={formAction} className="space-y-8 max-w-2xl">
       <input type="hidden" name="images" value={JSON.stringify(imageUrls)} />
-      <input type="hidden" name="video_url" value={videoUrl ?? ''} />
+      <input type="hidden" name="video_url" value={videoUrl} />
+      <input type="hidden" name="video_position" value={videoIndex >= 0 ? String(videoIndex) : ''} />
       <input type="hidden" name="description" value={description} />
       {/* Convert sentinel back to empty string so the action receives '' for "no series" */}
       <input type="hidden" name="series_id" value={seriesId === NONE ? '' : seriesId} />
@@ -214,14 +229,9 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
       </div>
 
       <div className="space-y-2">
-        <Label>Images</Label>
-        <ImageUploader existingImages={imageUrls} onChange={setImageUrls} />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Video</Label>
-        <p className="text-xs text-muted-foreground">Optional product video shown on the product page.</p>
-        <VideoUploader existingUrl={videoUrl} onChange={setVideoUrl} />
+        <Label>Media</Label>
+        <p className="text-xs text-muted-foreground">Photos and an optional video. Drag to set the order shown on the product page.</p>
+        <MediaUploader existing={media} onChange={setMedia} />
       </div>
 
       {state && 'error' in state && (

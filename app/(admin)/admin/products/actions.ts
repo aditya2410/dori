@@ -33,6 +33,15 @@ function parseImages(raw: string): string[] {
   }
 }
 
+// Position of the video within the combined media list. Only meaningful when a
+// video exists; otherwise null.
+function parseVideoPosition(formData: FormData): number | null {
+  if (!(formData.get('video_url') as string)) return null
+  const raw = formData.get('video_position') as string | null
+  const n = raw ? Number(raw) : NaN
+  return Number.isInteger(n) && n >= 0 ? n : null
+}
+
 async function syncProductSeries(
   supabase: ReturnType<typeof createServiceClient>,
   productId: string,
@@ -77,6 +86,7 @@ export async function createProduct(
       is_active: formData.get('is_active') === 'on',
       images: parseImages(parsed.data.images),
       video_url: (formData.get('video_url') as string) || null,
+      video_position: parseVideoPosition(formData),
       is_bestseller: isBestseller,
         bestseller_order: isBestseller
         ? (parseInt(formData.get('bestseller_order') as string, 10) || null)
@@ -131,6 +141,7 @@ export async function updateProduct(
       is_active: formData.get('is_active') === 'on',
       images: parseImages(parsed.data.images),
       video_url: (formData.get('video_url') as string) || null,
+      video_position: parseVideoPosition(formData),
       is_bestseller: isBestseller,
         bestseller_order: isBestseller
         ? (parseInt(formData.get('bestseller_order') as string, 10) || null)

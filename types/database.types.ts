@@ -151,6 +151,7 @@ export interface Database {
           price_paise: number
           images: Json
           video_url: string | null
+          video_position: number | null
           stock: number
           is_active: boolean
           is_bestseller: boolean
@@ -165,6 +166,7 @@ export interface Database {
           price_paise: number
           images?: Json
           video_url?: string | null
+          video_position?: number | null
           stock?: number
           is_active?: boolean
           is_bestseller?: boolean
@@ -179,6 +181,7 @@ export interface Database {
           price_paise?: number
           images?: Json
           video_url?: string | null
+          video_position?: number | null
           stock?: number
           is_active?: boolean
           is_bestseller?: boolean

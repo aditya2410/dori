@@ -9,11 +9,43 @@ interface ImageGalleryProps {
   images: string[]
   productName: string
   videoUrl?: string | null
+  videoPosition?: number | null
 }
 
 type Media =
   | { type: 'image'; url: string }
   | { type: 'video'; url: string }
+
+// Big centered play button; native controls appear once playing.
+function GalleryVideo({ url }: { url: string }) {
+  const ref = useRef<HTMLVideoElement>(null)
+  const [playing, setPlaying] = useState(false)
+  return (
+    <div className="relative h-full w-full">
+      <video
+        ref={ref}
+        src={url}
+        playsInline
+        controls={playing}
+        className="h-full w-full object-cover bg-secondary"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+      />
+      {!playing && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); ref.current?.play() }}
+          className="absolute inset-0 flex items-center justify-center bg-black/20"
+          aria-label="Play video"
+        >
+          <span className="flex items-center justify-center size-16 rounded-full bg-white/90 shadow-lg">
+            <Play className="size-7 text-black fill-black ml-1" />
+          </span>
+        </button>
+      )}
+    </div>
+  )
+}
 
 const SNAP_EASING  = 'transform 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
 const ZOOM_SNAP    = 'transform 0.3s ease'
@@ -32,12 +64,13 @@ function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v))
 }
 
-export function ImageGallery({ images, productName, videoUrl }: ImageGalleryProps) {
-  // Photos first, video (if any) as the last slide.
-  const media: Media[] = [
-    ...images.map((url) => ({ type: 'image' as const, url })),
-    ...(videoUrl ? [{ type: 'video' as const, url: videoUrl }] : []),
-  ]
+export function ImageGallery({ images, productName, videoUrl, videoPosition }: ImageGalleryProps) {
+  // Photos in order, with the video inserted at videoPosition (default: last).
+  const media: Media[] = images.map((url) => ({ type: 'image' as const, url }))
+  if (videoUrl) {
+    const pos = videoPosition ?? media.length
+    media.splice(Math.min(Math.max(pos, 0), media.length), 0, { type: 'video', url: videoUrl })
+  }
   const isImageActive = (i: number) => media[i]?.type === 'image'
 
   const [active, setActive]   = useState(0)
@@ -325,12 +358,7 @@ export function ImageGallery({ images, productName, videoUrl }: ImageGalleryProp
                   priority={i === 0}
                 />
               ) : (
-                <video
-                  src={item.url}
-                  controls
-                  playsInline
-                  className="h-full w-full object-cover bg-secondary"
-                />
+                <GalleryVideo url={item.url} />
               )}
             </div>
           ))}

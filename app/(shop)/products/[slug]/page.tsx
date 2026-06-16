@@ -54,6 +54,7 @@ export default async function ProductDetailPage({
             images={images}
             productName={product.name}
             videoUrl={product.video_url}
+            videoPosition={product.video_position}
           />
         </div>
 
