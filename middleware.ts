@@ -39,13 +39,17 @@ export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl
   const userAgent = request.headers.get('user-agent') ?? ''
 
-  // Skip static assets, API routes, bots, and Next.js link prefetches
+  // Skip static assets, API routes, and bots — no session refresh needed
   if (SKIP_PATHS.some((p) => pathname.startsWith(p) || pathname.endsWith(p)))
     return NextResponse.next()
   if (BOT_PATTERNS.test(userAgent))
     return NextResponse.next()
-  if (request.headers.has('next-router-prefetch'))
-    return NextResponse.next()
+
+  // Only count real page loads. Browsers set Sec-Fetch-Dest: document on full
+  // navigations (reload, typed URL, link click); prefetches and background RSC
+  // fetches send "empty". This signal comes from the browser, not Next.js, so
+  // it doesn't drift across Next versions the way Next-Router-Prefetch does.
+  const shouldLog = request.headers.get('sec-fetch-dest') === 'document'
 
   const start = Date.now()
   const requestId = newRequestId()
@@ -61,7 +65,7 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.redirect(callbackUrl)
     response.headers.set('x-request-id', requestId)
     log({ requestId, method: request.method, pathname, outcome: 'redirect:callback', ms: Date.now() - start })
-    insertVisitorLog({ request_id: requestId, ip, country, city, pathname, user_agent: userAgent, user_id: null })
+    if (shouldLog) insertVisitorLog({ request_id: requestId, ip, country, city, pathname, user_agent: userAgent, user_id: null })
     return response
   }
 
@@ -78,7 +82,7 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.redirect(loginUrl)
     response.headers.set('x-request-id', requestId)
     log({ requestId, method: request.method, pathname, outcome: 'redirect:login', ms: Date.now() - start })
-    insertVisitorLog({ request_id: requestId, ip, country, city, pathname, user_agent: userAgent, user_id: null })
+    if (shouldLog) insertVisitorLog({ request_id: requestId, ip, country, city, pathname, user_agent: userAgent, user_id: null })
     return response
   }
 
@@ -91,7 +95,7 @@ export async function middleware(request: NextRequest) {
     outcome: 'next',
     ms: Date.now() - start,
   })
-  insertVisitorLog({ request_id: requestId, ip, country, city, pathname, user_agent: userAgent, user_id: user?.id ?? null })
+  if (shouldLog) insertVisitorLog({ request_id: requestId, ip, country, city, pathname, user_agent: userAgent, user_id: user?.id ?? null })
   return supabaseResponse
 }
 
