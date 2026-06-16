@@ -45,11 +45,16 @@ export async function middleware(request: NextRequest) {
   if (BOT_PATTERNS.test(userAgent))
     return NextResponse.next()
 
-  // Only count real page loads. Browsers set Sec-Fetch-Dest: document on full
-  // navigations (reload, typed URL, link click); prefetches and background RSC
-  // fetches send "empty". This signal comes from the browser, not Next.js, so
-  // it doesn't drift across Next versions the way Next-Router-Prefetch does.
-  const shouldLog = request.headers.get('sec-fetch-dest') === 'document'
+  // Count one row per real visit: full page loads (Sec-Fetch-Dest: document)
+  // and client-side App Router navigations (RSC fetches), but NOT prefetches.
+  // Prefetches are marked by the browser's Sec-Purpose: prefetch header and/or
+  // Next's Next-Router-Prefetch header — exclude anything carrying either.
+  const isPrefetch =
+    request.headers.get('sec-purpose')?.includes('prefetch') ||
+    request.headers.has('next-router-prefetch')
+  const isDocumentLoad = request.headers.get('sec-fetch-dest') === 'document'
+  const isClientNav = request.headers.has('rsc')
+  const shouldLog = !isPrefetch && (isDocumentLoad || isClientNav)
 
   const start = Date.now()
   const requestId = newRequestId()
