@@ -2,12 +2,18 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
+import { Play } from 'lucide-react'
 import { BLUR_PLACEHOLDER } from '@/lib/utils'
 
 interface ImageGalleryProps {
   images: string[]
   productName: string
+  videoUrl?: string | null
 }
+
+type Media =
+  | { type: 'image'; url: string }
+  | { type: 'video'; url: string }
 
 const SNAP_EASING  = 'transform 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
 const ZOOM_SNAP    = 'transform 0.3s ease'
@@ -26,7 +32,14 @@ function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v))
 }
 
-export function ImageGallery({ images, productName }: ImageGalleryProps) {
+export function ImageGallery({ images, productName, videoUrl }: ImageGalleryProps) {
+  // Photos first, video (if any) as the last slide.
+  const media: Media[] = [
+    ...images.map((url) => ({ type: 'image' as const, url })),
+    ...(videoUrl ? [{ type: 'video' as const, url: videoUrl }] : []),
+  ]
+  const isImageActive = (i: number) => media[i]?.type === 'image'
+
   const [active, setActive]   = useState(0)
   const [isZoomed, setIsZoomed] = useState(false)
   const isZoomedRef = useRef(false)   // readable from non-passive native handlers
@@ -89,7 +102,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
   function cw() { return stripRef.current?.parentElement?.clientWidth ?? 0 }
 
   function applyStrip(p: number) {
-    const max = (images.length - 1) * cw()
+    const max = (media.length - 1) * cw()
     posRef.current = clamp(p, 0, max)
     if (stripRef.current) {
       stripRef.current.style.transition = 'none'
@@ -114,7 +127,8 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
     const touches = e.touches
 
     if (touches.length === 2) {
-      // Begin pinch
+      // Begin pinch — images only; the video slide isn't zoomable
+      if (!isImageActive(activeRef.current)) return
       touch1.current = { clientX: touches[0].clientX, clientY: touches[0].clientY }
       touch2.current = { clientX: touches[1].clientX, clientY: touches[1].clientY }
       startDist.current  = dist(touches[0], touches[1])
@@ -183,7 +197,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
       if (!isHoriz.current) return
       const cur = activeRef.current
       const atStart = cur === 0 && dx > 0
-      const atEnd   = cur === images.length - 1 && dx < 0
+      const atEnd   = cur === media.length - 1 && dx < 0
       if (!atStart && !atEnd) applyStrip(cur * cw() - dx)
     }
   }
@@ -211,7 +225,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
     swipeStartX.current = null
     if (Math.abs(delta) < 40) { snapStrip(activeRef.current); return }
     const next = delta < 0
-      ? Math.min(activeRef.current + 1, images.length - 1)
+      ? Math.min(activeRef.current + 1, media.length - 1)
       : Math.max(activeRef.current - 1, 0)
     snapStrip(next)
     isHoriz.current = null
@@ -220,6 +234,8 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
   // ── Desktop: click to zoom/unzoom, mousemove to pan ───────
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     if (isZoomed) { snapBack(); return }
+    // Don't hijack clicks on the video slide — let its native controls work
+    if (!isImageActive(active)) return
     const rect = e.currentTarget.getBoundingClientRect()
     const cx = e.clientX - rect.left
     const cy = e.clientY - rect.top
@@ -262,7 +278,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
     }
   }, [])
 
-  if (images.length === 0) {
+  if (media.length === 0) {
     return (
       <div className="aspect-[3/4] bg-secondary flex items-center justify-center">
         <span className="font-serif text-3xl text-muted-foreground">DORI</span>
@@ -290,23 +306,32 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
           ref={stripRef}
           className="flex h-full"
           style={{
-            width: `${images.length * 100}%`,
+            width: `${media.length * 100}%`,
             willChange: 'transform',
             visibility: isZoomed ? 'hidden' : 'visible',
           }}
         >
-          {images.map((url, i) => (
-            <div key={url} className="relative h-full" style={{ width: `${100 / images.length}%` }}>
-              <Image
-                src={url}
-                alt={`${productName} — ${i + 1}`}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                placeholder="blur"
-                blurDataURL={BLUR_PLACEHOLDER}
-                className="object-cover"
-                priority={i === 0}
-              />
+          {media.map((item, i) => (
+            <div key={item.url} className="relative h-full" style={{ width: `${100 / media.length}%` }}>
+              {item.type === 'image' ? (
+                <Image
+                  src={item.url}
+                  alt={`${productName} — ${i + 1}`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  placeholder="blur"
+                  blurDataURL={BLUR_PLACEHOLDER}
+                  className="object-cover"
+                  priority={i === 0}
+                />
+              ) : (
+                <video
+                  src={item.url}
+                  controls
+                  playsInline
+                  className="h-full w-full object-cover bg-secondary"
+                />
+              )}
             </div>
           ))}
         </div>
@@ -319,7 +344,7 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             ref={zoomRef}
-            src={images[active]}
+            src={isImageActive(active) ? media[active].url : ''}
             alt={productName}
             draggable={false}
             className="absolute top-0 left-0 w-full h-full object-cover select-none pointer-events-none"
@@ -328,9 +353,9 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
         </div>
 
         {/* Dots — mobile, not zoomed */}
-        {images.length > 1 && !isZoomed && (
+        {media.length > 1 && !isZoomed && (
           <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 md:hidden pointer-events-none">
-            {images.map((_, i) => (
+            {media.map((_, i) => (
               <span key={i} className={`size-1.5 rounded-full transition-colors duration-200 ${i === active ? 'bg-white' : 'bg-white/40'}`} />
             ))}
           </div>
@@ -345,25 +370,40 @@ export function ImageGallery({ images, productName }: ImageGalleryProps) {
       </div>
 
       {/* Thumbnails — desktop */}
-      {images.length > 1 && (
+      {media.length > 1 && (
         <div className="hidden md:grid grid-cols-4 gap-2">
-          {images.map((url, i) => (
+          {media.map((item, i) => (
             <button
-              key={url}
+              key={item.url}
               type="button"
               onClick={() => snapStrip(i)}
-              aria-label={`View image ${i + 1}`}
+              aria-label={item.type === 'video' ? 'View video' : `View image ${i + 1}`}
               className={`aspect-square bg-secondary overflow-hidden relative border-2 transition-colors ${active === i ? 'border-foreground' : 'border-transparent hover:border-foreground/30'}`}
             >
-              <Image
-                src={url}
-                alt={`${productName} — view ${i + 1}`}
-                fill
-                sizes="10vw"
-                placeholder="blur"
-                blurDataURL={BLUR_PLACEHOLDER}
-                className="object-cover"
-              />
+              {item.type === 'image' ? (
+                <Image
+                  src={item.url}
+                  alt={`${productName} — view ${i + 1}`}
+                  fill
+                  sizes="10vw"
+                  placeholder="blur"
+                  blurDataURL={BLUR_PLACEHOLDER}
+                  className="object-cover"
+                />
+              ) : (
+                <>
+                  <video
+                    src={item.url}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    className="h-full w-full object-cover"
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <Play className="size-5 text-white fill-white" />
+                  </span>
+                </>
+              )}
             </button>
           ))}
         </div>
