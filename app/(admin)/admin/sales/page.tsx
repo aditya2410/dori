@@ -22,6 +22,17 @@ export default async function AdminSalesPage() {
 
   if (error) console.error('[admin/sales]', error)
 
+  // Tally redemptions per code (non-cancelled orders) in a single query.
+  const { data: usedRows } = await supabase
+    .from('orders')
+    .select('sale_id')
+    .neq('status', 'cancelled')
+    .not('sale_id', 'is', null)
+  const usageCount = new Map<string, number>()
+  for (const r of usedRows ?? []) {
+    if (r.sale_id) usageCount.set(r.sale_id, (usageCount.get(r.sale_id) ?? 0) + 1)
+  }
+
   const now = Date.now()
 
   return (
@@ -51,6 +62,7 @@ export default async function AdminSalesPage() {
                 <th className="text-left p-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Code</th>
                 <th className="text-left p-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Discount</th>
                 <th className="text-left p-4 text-xs font-medium uppercase tracking-wider text-muted-foreground hidden md:table-cell">Window</th>
+                <th className="text-left p-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Used</th>
                 <th className="text-left p-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</th>
                 <th className="p-4" />
               </tr>
@@ -84,6 +96,10 @@ export default async function AdminSalesPage() {
                       {sale.usage_limit != null && (
                         <span className="block mt-1">Limit: {sale.usage_limit} uses</span>
                       )}
+                    </td>
+                    <td className="p-4 text-muted-foreground">
+                      {usageCount.get(sale.id) ?? 0}
+                      {sale.usage_limit != null && ` / ${sale.usage_limit}`}
                     </td>
                     <td className="p-4">
                       <Badge variant={live ? 'success' : 'secondary'}>{status}</Badge>
