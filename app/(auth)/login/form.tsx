@@ -1,20 +1,20 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useFormStatus } from 'react-dom'
-import { login, loginWithGoogle } from '../actions'
+import { login, loginWithGoogle, sendLoginCode, verifyLoginCode } from '../actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 
-function SubmitButton() {
+function PendingButton({ label, pendingLabel }: { label: string; pendingLabel: string }) {
   const { pending } = useFormStatus()
   return (
     <Button type="submit" className="w-full" size="lg" disabled={pending}>
-      {pending ? 'Signing in…' : 'Sign in'}
+      {pending ? pendingLabel : label}
     </Button>
   )
 }
@@ -23,20 +23,29 @@ export default function LoginForm() {
   const searchParams = useSearchParams()
   const next = searchParams.get('next') ?? ''
   const urlError = searchParams.get('error')
-
-  const [state, formAction] = useActionState(login, null)
-
   const reason = searchParams.get('reason')
-  const errorMessage =
-    (state && 'error' in state ? state.error : null) ??
+
+  const [mode, setMode] = useState<'code' | 'password'>('code')
+  const [email, setEmail] = useState(searchParams.get('email') ?? '')
+  const [codeSent, setCodeSent] = useState(false)
+
+  const [sendState, sendAction] = useActionState(sendLoginCode, null)
+  const [verifyState, verifyAction] = useActionState(verifyLoginCode, null)
+  const [pwState, pwAction] = useActionState(login, null)
+
+  useEffect(() => {
+    if (sendState && 'message' in sendState) setCodeSent(true)
+  }, [sendState])
+
+  const urlErrorMessage =
     (urlError === 'google_oauth_failed' ? 'Google sign-in failed. Please try again.' : null) ??
-    (urlError === 'callback_failed' ? `Sign-in link failed${reason ? `: ${reason}` : ''}. Try signing in manually.` : null)
+    (urlError === 'callback_failed' ? `Sign-in link failed${reason ? `: ${reason}` : ''}. Try again.` : null)
 
   return (
     <div className="w-full max-w-sm space-y-8">
       <div className="space-y-1 text-center">
         <h1 className="font-serif text-3xl font-normal">Welcome back</h1>
-        <p className="text-sm text-muted-foreground">Sign in to your DORI account</p>
+        <p className="text-sm text-muted-foreground">Sign in to track your orders</p>
       </div>
 
       <form action={loginWithGoogle}>
@@ -53,31 +62,95 @@ export default function LoginForm() {
         <Separator className="flex-1" />
       </div>
 
-      <form action={formAction} className="space-y-5">
-        <input type="hidden" name="next" value={next} />
-
-        <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
-        </div>
-
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link
-              href="/forgot-password"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+      {mode === 'code' ? (
+        !codeSent ? (
+          <form action={sendAction} className="space-y-5">
+            <input type="hidden" name="next" value={next} />
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            {sendState && 'error' in sendState && <p className="text-sm text-destructive">{sendState.error}</p>}
+            <PendingButton label="Email me a code" pendingLabel="Sending…" />
+          </form>
+        ) : (
+          <form action={verifyAction} className="space-y-5">
+            <input type="hidden" name="next" value={next} />
+            <input type="hidden" name="email" value={email} />
+            <p className="text-sm text-muted-foreground text-center">
+              We sent a 6-digit code to <span className="text-foreground">{email}</span>.
+            </p>
+            <div className="space-y-1.5">
+              <Label htmlFor="token">Login code</Label>
+              <Input
+                id="token"
+                name="token"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="123456"
+                className="tracking-[0.3em] text-center"
+                required
+              />
+            </div>
+            {verifyState && 'error' in verifyState && <p className="text-sm text-destructive">{verifyState.error}</p>}
+            <PendingButton label="Sign in" pendingLabel="Verifying…" />
+            <button
+              type="button"
+              onClick={() => setCodeSent(false)}
+              className="block w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              Forgot password?
-            </Link>
+              Use a different email or resend code
+            </button>
+          </form>
+        )
+      ) : (
+        <form action={pwAction} className="space-y-5">
+          <input type="hidden" name="next" value={next} />
+          <div className="space-y-1.5">
+            <Label htmlFor="email-pw">Email</Label>
+            <Input
+              id="email-pw"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
-          <Input id="password" name="password" type="password" autoComplete="current-password" placeholder="••••••••" required />
-        </div>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                Forgot password?
+              </Link>
+            </div>
+            <Input id="password" name="password" type="password" autoComplete="current-password" placeholder="••••••••" required />
+          </div>
+          {pwState && 'error' in pwState && <p className="text-sm text-destructive">{pwState.error}</p>}
+          <PendingButton label="Sign in" pendingLabel="Signing in…" />
+        </form>
+      )}
 
-        {errorMessage && <p className="text-sm text-destructive">{errorMessage}</p>}
+      {urlErrorMessage && <p className="text-sm text-destructive text-center">{urlErrorMessage}</p>}
 
-        <SubmitButton />
-      </form>
+      <button
+        type="button"
+        onClick={() => setMode(mode === 'code' ? 'password' : 'code')}
+        className="block w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {mode === 'code' ? 'Use password instead' : 'Email me a code instead'}
+      </button>
 
       <p className="text-center text-sm text-muted-foreground">
         No account?{' '}

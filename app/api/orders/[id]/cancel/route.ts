@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export async function POST(
   _request: NextRequest,
@@ -7,25 +7,19 @@ export async function POST(
 ) {
   const { id } = await params
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
+  // No session required — guests can abandon payment too. The order UUID is the
+  // capability, and only unpaid ("created") orders can be cancelled here.
   const service = createServiceClient()
 
-  // Only cancel if this user owns the order and it is still unpaid
   const { data: order } = await service
     .from('orders')
     .select('id')
     .eq('id', id)
-    .eq('user_id', user.id)
     .eq('status', 'created')
     .single()
 
   if (!order) {
-    // Already cancelled, paid, or doesn't belong to user — treat as success (idempotent)
+    // Already cancelled, paid, or doesn't exist — treat as success (idempotent)
     return NextResponse.json({ ok: true })
   }
 

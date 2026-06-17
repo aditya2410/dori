@@ -7,6 +7,8 @@ import Image from 'next/image'
 import { ChevronLeft, MapPin, Plus } from 'lucide-react'
 import { useCart } from '@/contexts/cart'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { AddressForm } from '@/components/account/address-form'
 import { formatPrice } from '@/lib/utils'
@@ -23,6 +25,7 @@ type Address = {
 }
 
 interface CheckoutFlowProps {
+  isGuest: boolean
   addresses: Address[]
   userEmail: string
   userName: string
@@ -38,7 +41,9 @@ function calcShipping(_subtotalPaise: number) {
   return SHIPPING_PAISE
 }
 
-export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: CheckoutFlowProps) {
+const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+
+export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhone }: CheckoutFlowProps) {
   const router = useRouter()
   const { items, totalPaise: subtotalPaise, clearCart, isHydrated } = useCart()
 
@@ -50,6 +55,16 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Guest details (no account required)
+  const [guest, setGuest] = useState({
+    email: '', full_name: '', phone: '', line1: '', line2: '', city: '', state: '', pincode: '',
+  })
+  const setG = (k: keyof typeof guest) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setGuest((g) => ({ ...g, [k]: e.target.value }))
+  const guestValid =
+    isEmail(guest.email) && !!guest.full_name && !!guest.phone &&
+    !!guest.line1 && !!guest.city && !!guest.state && !!guest.pincode
+
   // Promo / sale code
   const [codeInput, setCodeInput] = useState('')
   const [appliedCode, setAppliedCode] = useState<string | null>(null)
@@ -59,7 +74,12 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
 
   const shippingPaise = calcShipping(subtotalPaise)
   const totalPaise = subtotalPaise - discountPaise + shippingPaise
-  const selectedAddress = addresses.find((a) => a.id === selectedId)
+
+  const reviewAddress = isGuest
+    ? { line1: guest.line1, line2: guest.line2, city: guest.city, state: guest.state, pincode: guest.pincode }
+    : addresses.find((a) => a.id === selectedId)
+
+  const canContinue = isGuest ? guestValid : !!selectedId
 
   async function applyCode() {
     const code = codeInput.trim()
@@ -126,7 +146,7 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
   }
 
   async function handlePay() {
-    if (!selectedId) return
+    if (isGuest ? !guestValid : !selectedId) return
     setProcessing(true)
     setError(null)
 
@@ -153,8 +173,10 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          addressId: selectedId,
           items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+          ...(isGuest
+            ? { guest: { ...guest, line2: guest.line2 || undefined } }
+            : { addressId: selectedId }),
           ...(appliedCode ? { saleCode: appliedCode } : {}),
         }),
       })
@@ -179,7 +201,9 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
       name: 'DORI',
       description: `Order ${orderData.orderNumber}`,
       order_id: orderData.razorpayOrderId,
-      prefill: { name: userName, email: userEmail, contact: userPhone },
+      prefill: isGuest
+        ? { name: guest.full_name, email: guest.email, contact: guest.phone }
+        : { name: userName, email: userEmail, contact: userPhone },
       theme: { color: '#1a1a1a' },
       modal: {
         ondismiss: () => {
@@ -241,73 +265,125 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
           <div className="space-y-8">
             <h1 className="font-serif text-3xl font-normal">Delivery Address</h1>
 
-            {addresses.length > 0 && (
-              <div className="space-y-3">
-                {addresses.map((addr) => (
-                  <label
-                    key={addr.id}
-                    className={`flex items-start gap-4 border p-4 cursor-pointer transition-colors ${
-                      selectedId === addr.id ? 'border-foreground' : 'hover:border-foreground/40'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="address"
-                      value={addr.id}
-                      checked={selectedId === addr.id}
-                      onChange={() => { setSelectedId(addr.id); setShowAddForm(false) }}
-                      className="mt-0.5 accent-foreground"
-                    />
-                    <div className="text-sm leading-relaxed">
-                      <p className="font-medium">{addr.line1}</p>
-                      {addr.line2 && <p className="text-muted-foreground">{addr.line2}</p>}
-                      <p className="text-muted-foreground">
-                        {addr.city}, {addr.state} {addr.pincode}
-                      </p>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            )}
-
-            {!showAddForm ? (
-              <button
-                type="button"
-                onClick={() => { setShowAddForm(true); setSelectedId('') }}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Plus className="size-4" />
-                Add new address
-              </button>
-            ) : (
+            {isGuest ? (
+              /* ── Guest details — no account/sign-in required ── */
               <div className="space-y-4">
-                <h2 className="font-serif text-xl font-normal">New Address</h2>
-                <AddressForm
-                  submitLabel="Save & use this address"
-                  onSuccess={() => {
-                    setShowAddForm(false)
-                    // Page will revalidate and refetch addresses
-                    window.location.reload()
-                  }}
-                />
+                <div className="space-y-1.5">
+                  <Label htmlFor="g-email">Email</Label>
+                  <Input id="g-email" type="email" autoComplete="email" placeholder="you@example.com" value={guest.email} onChange={setG('email')} required />
+                  <p className="text-xs text-muted-foreground">Order updates go here, and you can track orders later with a login code.</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="g-name">Full name</Label>
+                    <Input id="g-name" autoComplete="name" placeholder="Priya Sharma" value={guest.full_name} onChange={setG('full_name')} required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="g-phone">Phone number</Label>
+                    <Input id="g-phone" type="tel" autoComplete="tel" placeholder="+91 98765 43210" value={guest.phone} onChange={setG('phone')} required />
+                  </div>
+                </div>
+                <Separator />
+                <div className="space-y-1.5">
+                  <Label htmlFor="g-line1">Address line 1</Label>
+                  <Input id="g-line1" placeholder="Building, street" value={guest.line1} onChange={setG('line1')} required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="g-line2">Line 2 <span className="text-muted-foreground font-normal normal-case tracking-normal">(optional)</span></Label>
+                  <Input id="g-line2" placeholder="Apartment, floor, landmark" value={guest.line2} onChange={setG('line2')} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="g-city">City</Label>
+                    <Input id="g-city" placeholder="Mumbai" value={guest.city} onChange={setG('city')} required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="g-state">State</Label>
+                    <Input id="g-state" placeholder="Maharashtra" value={guest.state} onChange={setG('state')} required />
+                  </div>
+                </div>
+                <div className="space-y-1.5 max-w-[160px]">
+                  <Label htmlFor="g-pincode">Pincode</Label>
+                  <Input id="g-pincode" maxLength={6} placeholder="400001" value={guest.pincode} onChange={setG('pincode')} required />
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Have an account?{' '}
+                  <Link href="/login?next=/checkout" className="text-foreground underline underline-offset-4 hover:opacity-70">Sign in</Link>{' '}
+                  to use a saved address.
+                </p>
+              </div>
+            ) : (
+              <>
                 {addresses.length > 0 && (
+                  <div className="space-y-3">
+                    {addresses.map((addr) => (
+                      <label
+                        key={addr.id}
+                        className={`flex items-start gap-4 border p-4 cursor-pointer transition-colors ${
+                          selectedId === addr.id ? 'border-foreground' : 'hover:border-foreground/40'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="address"
+                          value={addr.id}
+                          checked={selectedId === addr.id}
+                          onChange={() => { setSelectedId(addr.id); setShowAddForm(false) }}
+                          className="mt-0.5 accent-foreground"
+                        />
+                        <div className="text-sm leading-relaxed">
+                          <p className="font-medium">{addr.line1}</p>
+                          {addr.line2 && <p className="text-muted-foreground">{addr.line2}</p>}
+                          <p className="text-muted-foreground">
+                            {addr.city}, {addr.state} {addr.pincode}
+                          </p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {!showAddForm ? (
                   <button
                     type="button"
-                    onClick={() => setShowAddForm(false)}
-                    className="text-sm text-muted-foreground hover:text-foreground"
+                    onClick={() => { setShowAddForm(true); setSelectedId('') }}
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    Cancel
+                    <Plus className="size-4" />
+                    Add new address
                   </button>
+                ) : (
+                  <div className="space-y-4">
+                    <h2 className="font-serif text-xl font-normal">New Address</h2>
+                    <AddressForm
+                      submitLabel="Save & use this address"
+                      onSuccess={() => {
+                        setShowAddForm(false)
+                        // Page will revalidate and refetch addresses
+                        window.location.reload()
+                      }}
+                    />
+                    {addresses.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAddForm(false)}
+                        className="text-sm text-muted-foreground hover:text-foreground"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
                 )}
-              </div>
+              </>
             )}
 
-            {!showAddForm && (
+            {(isGuest || !showAddForm) && (
               <Button
                 size="lg"
                 className="w-full"
                 data-track="checkout-continue-to-review"
-                disabled={!selectedId}
+                disabled={!canContinue}
                 onClick={() => setStep('review')}
               >
                 Continue to Review
@@ -331,7 +407,7 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
             </div>
 
             {/* Shipping address */}
-            {selectedAddress && (
+            {reviewAddress && (
               <div className="border p-4 space-y-1">
                 <div className="flex items-center justify-between">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -344,12 +420,12 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
                     Change
                   </button>
                 </div>
-                <p className="text-sm font-medium">{selectedAddress.line1}</p>
-                {selectedAddress.line2 && (
-                  <p className="text-sm text-muted-foreground">{selectedAddress.line2}</p>
+                <p className="text-sm font-medium">{reviewAddress.line1}</p>
+                {reviewAddress.line2 && (
+                  <p className="text-sm text-muted-foreground">{reviewAddress.line2}</p>
                 )}
                 <p className="text-sm text-muted-foreground">
-                  {selectedAddress.city}, {selectedAddress.state} {selectedAddress.pincode}
+                  {reviewAddress.city}, {reviewAddress.state} {reviewAddress.pincode}
                 </p>
               </div>
             )}

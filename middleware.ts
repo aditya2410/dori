@@ -8,7 +8,8 @@ const SKIP_PATHS = [
 
 const BOT_PATTERNS = /bot|crawler|spider|curl|postman|python|axios/i
 
-const PROTECTED_PREFIXES = ['/checkout', '/account']
+// Note: /checkout is intentionally NOT protected — guests can buy without an account.
+const PROTECTED_PREFIXES = ['/account']
 const ADMIN_PREFIX = '/admin'
 
 function newRequestId() {

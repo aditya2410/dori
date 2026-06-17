@@ -4,10 +4,23 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getRazorpay } from '@/lib/razorpay'
 import { generateOrderNumber } from '@/lib/utils'
 import { computeSaleDiscount } from '@/lib/sales'
-import type { ShippingAddress } from '@/types/database.types'
+import { getOrCreateUserByEmail } from '@/lib/auth'
+import type { ShippingAddress, Json } from '@/types/database.types'
+
+const guestSchema = z.object({
+  email: z.string().email('Enter a valid email.'),
+  full_name: z.string().min(1, 'Name is required.'),
+  phone: z.string().min(1, 'Phone is required.'),
+  line1: z.string().min(1, 'Address is required.'),
+  line2: z.string().optional(),
+  city: z.string().min(1, 'City is required.'),
+  state: z.string().min(1, 'State is required.'),
+  pincode: z.string().min(1, 'Pincode is required.'),
+})
 
 const bodySchema = z.object({
-  addressId: z.string().uuid(),
+  addressId: z.string().uuid().optional(),
+  guest: guestSchema.optional(),
   items: z
     .array(
       z.object({
@@ -25,13 +38,6 @@ function calcShipping(_subtotalPaise: number): number {
 }
 
 export async function POST(request: NextRequest) {
-  // ── Auth ────────────────────────────────────────────────────
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   // ── Parse + validate body ────────────────────────────────────
   let body: unknown
   try {
@@ -43,24 +49,89 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
   }
-  const { addressId, items, saleCode } = parsed.data
+  const { addressId, guest, items, saleCode } = parsed.data
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   const service = createServiceClient()
 
-  // ── Verify address belongs to this user ──────────────────────
-  const { data: address } = await service
-    .from('addresses')
-    .select('*')
-    .eq('id', addressId)
-    .eq('user_id', user.id)
-    .single()
-  if (!address) return NextResponse.json({ error: 'Address not found' }, { status: 400 })
+  // ── Resolve the buyer (logged-in OR guest) + shipping address ─
+  let userId: string
+  let shippingAddress: ShippingAddress
 
-  // ── Load profile for shipping contact ───────────────────────
-  const { data: profile } = await service
-    .from('profiles')
-    .select('full_name, phone')
-    .eq('id', user.id)
-    .single()
+  if (user) {
+    if (!addressId) return NextResponse.json({ error: 'Address required' }, { status: 400 })
+
+    const { data: address } = await service
+      .from('addresses')
+      .select('*')
+      .eq('id', addressId)
+      .eq('user_id', user.id)
+      .single()
+    if (!address) return NextResponse.json({ error: 'Address not found' }, { status: 400 })
+
+    const { data: profile } = await service
+      .from('profiles')
+      .select('full_name, phone')
+      .eq('id', user.id)
+      .single()
+
+    userId = user.id
+    shippingAddress = {
+      line1: address.line1,
+      ...(address.line2 ? { line2: address.line2 } : {}),
+      city: address.city,
+      state: address.state,
+      pincode: address.pincode,
+      country: address.country,
+      full_name: address.full_name ?? profile?.full_name ?? user.email ?? 'Customer',
+      phone: address.phone ?? profile?.phone ?? '',
+      contact_email: address.contact_email ?? user.email ?? undefined,
+    }
+  } else {
+    // Guest checkout — create/reuse a passwordless account for this email.
+    if (!guest) return NextResponse.json({ error: 'Please enter your details' }, { status: 400 })
+
+    const resolved = await getOrCreateUserByEmail(service, guest.email, guest.full_name)
+    if ('error' in resolved) return NextResponse.json({ error: resolved.error }, { status: 500 })
+    userId = resolved.userId
+
+    shippingAddress = {
+      line1: guest.line1,
+      ...(guest.line2 ? { line2: guest.line2 } : {}),
+      city: guest.city,
+      state: guest.state,
+      pincode: guest.pincode,
+      country: 'IN',
+      full_name: guest.full_name,
+      phone: guest.phone,
+      contact_email: guest.email,
+    }
+
+    // Best-effort: fill the profile and save the address for future visits.
+    await service.from('profiles').update({ full_name: guest.full_name, phone: guest.phone }).eq('id', userId)
+    const { count } = await service
+      .from('addresses')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+    if (!count) {
+      await service.from('addresses').insert({
+        user_id: userId,
+        full_name: guest.full_name,
+        phone: guest.phone,
+        contact_email: guest.email,
+        line1: guest.line1,
+        line2: guest.line2 ?? null,
+        city: guest.city,
+        state: guest.state,
+        pincode: guest.pincode,
+        country: 'IN',
+        is_default: true,
+      })
+    }
+  }
 
   // ── Load + validate products ─────────────────────────────────
   const productIds = items.map((i) => i.productId)
@@ -98,7 +169,7 @@ export async function POST(request: NextRequest) {
   let discountPaise = 0
   let saleId: string | null = null
   if (saleCode) {
-    const result = await computeSaleDiscount(service, saleCode, user.id, subtotalPaise)
+    const result = await computeSaleDiscount(service, saleCode, userId, subtotalPaise)
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
     discountPaise = result.discountPaise
     saleId = result.saleId
@@ -107,25 +178,12 @@ export async function POST(request: NextRequest) {
   const shippingPaise = calcShipping(subtotalPaise)
   const totalPaise = subtotalPaise - discountPaise + shippingPaise
 
-  const shippingAddress: ShippingAddress = {
-    line1: address.line1,
-    ...(address.line2 ? { line2: address.line2 } : {}),
-    city: address.city,
-    state: address.state,
-    pincode: address.pincode,
-    country: address.country,
-    // Use address-level contact info first (allows gifting to a different person)
-    full_name: address.full_name ?? profile?.full_name ?? user.email ?? 'Customer',
-    phone: address.phone ?? profile?.phone ?? '',
-    contact_email: address.contact_email ?? user.email ?? undefined,
-  }
-
   // ── Create order ─────────────────────────────────────────────
   const orderNumber = generateOrderNumber()
   const { data: order, error: orderErr } = await service
     .from('orders')
     .insert({
-      user_id: user.id,
+      user_id: userId,
       order_number: orderNumber,
       status: 'created',
       subtotal_paise: subtotalPaise,
@@ -133,7 +191,7 @@ export async function POST(request: NextRequest) {
       discount_paise: discountPaise,
       sale_id: saleId,
       total_paise: totalPaise,
-      shipping_address: shippingAddress as unknown as import('@/types/database.types').Json,
+      shipping_address: shippingAddress as unknown as Json,
     })
     .select('id')
     .single()

@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { CheckoutFlow } from '@/components/checkout/checkout-flow'
@@ -10,7 +9,13 @@ export default async function CheckoutPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) redirect('/login?next=/checkout')
+
+  // Guests can check out without an account — no login redirect.
+  if (!user) {
+    return (
+      <CheckoutFlow isGuest addresses={[]} userEmail="" userName="" userPhone="" />
+    )
+  }
 
   const service = createServiceClient()
   const [{ data: addresses }, { data: profile }] = await Promise.all([
@@ -24,13 +29,12 @@ export default async function CheckoutPage() {
   ])
 
   return (
-    <>
-      <CheckoutFlow
-        addresses={addresses ?? []}
-        userEmail={user.email ?? ''}
-        userName={profile?.full_name ?? ''}
-        userPhone={profile?.phone ?? ''}
-      />
-    </>
+    <CheckoutFlow
+      isGuest={false}
+      addresses={addresses ?? []}
+      userEmail={user.email ?? ''}
+      userName={profile?.full_name ?? ''}
+      userPhone={profile?.phone ?? ''}
+    />
   )
 }

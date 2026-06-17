@@ -92,6 +92,46 @@ export async function signup(_prev: AuthState, formData: FormData): Promise<Auth
   redirect(parsed.data.next ?? '/account')
 }
 
+const emailCodeSchema = z.object({
+  email: z.string().email('Please enter a valid email address.'),
+  next: z.string().startsWith('/').optional().catch(undefined),
+})
+
+// Passwordless login — email the customer a one-time code (Shopify-style).
+// shouldCreateUser:false so this only logs into existing accounts (guest
+// checkout already created the account).
+export async function sendLoginCode(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const parsed = emailCodeSchema.safeParse({
+    email: formData.get('email'),
+    next: formData.get('next'),
+  })
+  if (!parsed.success) return { error: parsed.error.errors[0].message }
+
+  const supabase = await createClient()
+  await supabase.auth.signInWithOtp({
+    email: parsed.data.email,
+    options: { shouldCreateUser: false },
+  })
+
+  // Always return the same message — don't reveal whether the account exists.
+  return { message: 'If an account exists for that email, a 6-digit code is on its way.' }
+}
+
+export async function verifyLoginCode(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const email = formData.get('email') as string
+  const token = (formData.get('token') as string)?.trim()
+  const next = formData.get('next')
+
+  if (!z.string().email().safeParse(email).success) return { error: 'Enter a valid email.' }
+  if (!token || token.length < 6) return { error: 'Enter the 6-digit code from your email.' }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' })
+  if (error) return { error: 'Invalid or expired code. Request a new one.' }
+
+  redirect(typeof next === 'string' && next.startsWith('/') ? next : '/account')
+}
+
 export async function loginWithGoogle(formData: FormData): Promise<never> {
   const headersList = await headers()
   const origin = headersList.get('origin') ?? process.env.NEXT_PUBLIC_SITE_URL!

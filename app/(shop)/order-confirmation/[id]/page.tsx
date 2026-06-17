@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle, Package } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -20,18 +20,17 @@ export default async function OrderConfirmationPage({
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
 
+  // No login required — the unguessable order UUID is the capability. Guests see
+  // their confirmation right after paying.
   const service = createServiceClient()
   const { data: order } = await service
     .from('orders')
     .select('*')
     .eq('id', id)
-    .eq('user_id', user.id)
     .single()
 
-  if (!order) notFound()
-  if (order.status !== 'paid') redirect('/account/orders')
+  if (!order || order.status !== 'paid') notFound()
 
   const { data: orderItems } = await service
     .from('order_items')
@@ -48,7 +47,7 @@ export default async function OrderConfirmationPage({
           <CheckCircle className="size-12 text-foreground mx-auto" strokeWidth={1.5} />
           <h1 className="font-serif text-3xl font-normal">Order Confirmed</h1>
           <p className="text-sm text-muted-foreground">
-            We sent a confirmation to <span className="text-foreground">{user.email}</span>
+            We sent a confirmation to <span className="text-foreground">{addr.contact_email}</span>
           </p>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">
             {order.order_number}
@@ -114,10 +113,25 @@ export default async function OrderConfirmationPage({
           You'll receive a shipping notification once your order is on its way.
         </p>
 
+        {!user && (
+          <p className="text-sm text-muted-foreground text-center leading-relaxed">
+            We created an account for you. Track this and future orders any time —
+            just sign in with your email and we'll send a login code.
+          </p>
+        )}
+
         <div className="flex flex-col gap-3">
-          <Button asChild size="lg">
-            <Link href="/account/orders">View all orders</Link>
-          </Button>
+          {user ? (
+            <Button asChild size="lg">
+              <Link href="/account/orders">View all orders</Link>
+            </Button>
+          ) : (
+            <Button asChild size="lg">
+              <Link href={`/login?email=${encodeURIComponent(addr.contact_email ?? '')}&next=/account/orders`}>
+                Track your order
+              </Link>
+            </Button>
+          )}
           <Button variant="outline" size="lg" asChild>
             <Link href="/products">Continue shopping</Link>
           </Button>

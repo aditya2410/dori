@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { verifyPaymentSignature } from '@/lib/razorpay'
 import { sendOrderConfirmationEmail } from '@/lib/email'
 import type { ShippingAddress } from '@/types/database.types'
@@ -13,12 +13,9 @@ const bodySchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
-  // ── Auth ────────────────────────────────────────────────────
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // No session required — guests pay too. Authorization is the Razorpay HMAC
+  // signature plus the stored razorpay_order_id match below: only the actual
+  // payer holds a valid signature for this order.
 
   // ── Parse body ───────────────────────────────────────────────
   let body: unknown
@@ -41,12 +38,11 @@ export async function POST(request: NextRequest) {
 
   const service = createServiceClient()
 
-  // ── Load order — confirm it belongs to this user ─────────────
+  // ── Load order ───────────────────────────────────────────────
   const { data: order } = await service
     .from('orders')
     .select('id, user_id, order_number, status, razorpay_order_id, total_paise, shipping_paise, subtotal_paise, discount_paise, shipping_address')
     .eq('id', orderId)
-    .eq('user_id', user.id)
     .single()
 
   if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
@@ -90,7 +86,13 @@ export async function POST(request: NextRequest) {
       .eq('order_id', orderId)
 
     const addr = order.shipping_address as unknown as ShippingAddress
-    const to = addr.contact_email ?? user.email!
+    const { data: profile } = await service
+      .from('profiles')
+      .select('email')
+      .eq('id', order.user_id)
+      .single()
+    const to = addr.contact_email ?? profile?.email
+    if (!to) throw new Error('No recipient email for order ' + order.id)
 
     await sendOrderConfirmationEmail({
       to,
