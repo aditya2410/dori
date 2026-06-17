@@ -162,6 +162,12 @@ export default async function OrderDetailPage({
           <span className="text-muted-foreground">Subtotal</span>
           <span>{formatPrice(order.subtotal_paise)}</span>
         </div>
+        {order.discount_paise > 0 && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Discount</span>
+            <span>−{formatPrice(order.discount_paise)}</span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span className="text-muted-foreground">Shipping</span>
           <span>{order.shipping_paise === 0 ? 'Free' : formatPrice(order.shipping_paise)}</span>

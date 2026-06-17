@@ -112,6 +112,7 @@ interface OrderConfirmationData {
   items: OrderItem[]
   subtotalPaise: number
   shippingPaise: number
+  discountPaise?: number
   totalPaise: number
   shippingAddress: ShippingAddress
 }
@@ -133,6 +134,7 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationData) {
 
     <table width="100%" cellpadding="0" cellspacing="0">
       ${totalRow('Subtotal', formatPrice(data.subtotalPaise))}
+      ${data.discountPaise ? totalRow('Discount', `−${formatPrice(data.discountPaise)}`) : ''}
       ${totalRow('Shipping', data.shippingPaise === 0 ? 'Free' : formatPrice(data.shippingPaise))}
       ${totalRow('Total', formatPrice(data.totalPaise), true)}
     </table>

@@ -190,6 +190,51 @@ export interface Database {
         }
         Relationships: []
       }
+      sales: {
+        Row: {
+          id: string
+          code: string
+          description: string | null
+          discount_percent: number
+          min_order_paise: number | null
+          max_discount_paise: number | null
+          usage_limit: number | null
+          starts_at: string
+          ends_at: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          code: string
+          description?: string | null
+          discount_percent: number
+          min_order_paise?: number | null
+          max_discount_paise?: number | null
+          usage_limit?: number | null
+          starts_at: string
+          ends_at: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          description?: string | null
+          discount_percent?: number
+          min_order_paise?: number | null
+          max_discount_paise?: number | null
+          usage_limit?: number | null
+          starts_at?: string
+          ends_at?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       series: {
         Row: {
           id: string
@@ -316,6 +361,8 @@ export interface Database {
           settled: boolean
           subtotal_paise: number
           shipping_paise: number
+          discount_paise: number
+          sale_id: string | null
           total_paise: number
           shipping_address: Json
           tracking_number: string | null
@@ -333,6 +380,8 @@ export interface Database {
           settled?: boolean
           subtotal_paise: number
           shipping_paise?: number
+          discount_paise?: number
+          sale_id?: string | null
           total_paise: number
           shipping_address: Json
           tracking_number?: string | null
@@ -350,6 +399,8 @@ export interface Database {
           settled?: boolean
           subtotal_paise?: number
           shipping_paise?: number
+          discount_paise?: number
+          sale_id?: string | null
           total_paise?: number
           shipping_address?: Json
           tracking_number?: string | null

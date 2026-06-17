@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
   // ── Load order — confirm it belongs to this user ─────────────
   const { data: order } = await service
     .from('orders')
-    .select('id, user_id, order_number, status, razorpay_order_id, total_paise, shipping_paise, subtotal_paise, shipping_address')
+    .select('id, user_id, order_number, status, razorpay_order_id, total_paise, shipping_paise, subtotal_paise, discount_paise, shipping_address')
     .eq('id', orderId)
     .eq('user_id', user.id)
     .single()
@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
       })),
       subtotalPaise: order.subtotal_paise,
       shippingPaise: order.shipping_paise,
+      discountPaise: order.discount_paise,
       totalPaise: order.total_paise,
       shippingAddress: addr,
     })

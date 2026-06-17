@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getRazorpay } from '@/lib/razorpay'
 import { generateOrderNumber } from '@/lib/utils'
+import { computeSaleDiscount } from '@/lib/sales'
 import type { ShippingAddress } from '@/types/database.types'
 
 const bodySchema = z.object({
@@ -15,6 +16,7 @@ const bodySchema = z.object({
       }),
     )
     .min(1, 'Cart is empty'),
+  saleCode: z.string().trim().min(1).optional(),
 })
 
 // Fixed shipping — configure via SHIPPING_PAISE env var (default ₹150)
@@ -41,7 +43,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
   }
-  const { addressId, items } = parsed.data
+  const { addressId, items, saleCode } = parsed.data
   const service = createServiceClient()
 
   // ── Verify address belongs to this user ──────────────────────
@@ -91,8 +93,19 @@ export async function POST(request: NextRequest) {
     (s, i) => s + productMap.get(i.productId)!.price_paise * i.quantity,
     0,
   )
+
+  // ── Apply sale code (validated + computed server-side) ───────
+  let discountPaise = 0
+  let saleId: string | null = null
+  if (saleCode) {
+    const result = await computeSaleDiscount(service, saleCode, user.id, subtotalPaise)
+    if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
+    discountPaise = result.discountPaise
+    saleId = result.saleId
+  }
+
   const shippingPaise = calcShipping(subtotalPaise)
-  const totalPaise = subtotalPaise + shippingPaise
+  const totalPaise = subtotalPaise - discountPaise + shippingPaise
 
   const shippingAddress: ShippingAddress = {
     line1: address.line1,
@@ -117,6 +130,8 @@ export async function POST(request: NextRequest) {
       status: 'created',
       subtotal_paise: subtotalPaise,
       shipping_paise: shippingPaise,
+      discount_paise: discountPaise,
+      sale_id: saleId,
       total_paise: totalPaise,
       shipping_address: shippingAddress as unknown as import('@/types/database.types').Json,
     })
@@ -124,6 +139,10 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (orderErr || !order) {
+    // Unique violation on the partial (sale_id, user_id) index = code already used.
+    if (orderErr?.code === '23505' && saleId) {
+      return NextResponse.json({ error: 'You have already used this code.' }, { status: 400 })
+    }
     console.error('[orders/create] insert order:', orderErr)
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
   }

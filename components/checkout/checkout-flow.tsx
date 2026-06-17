@@ -50,9 +50,54 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Promo / sale code
+  const [codeInput, setCodeInput] = useState('')
+  const [appliedCode, setAppliedCode] = useState<string | null>(null)
+  const [discountPaise, setDiscountPaise] = useState(0)
+  const [codeError, setCodeError] = useState<string | null>(null)
+  const [applying, setApplying] = useState(false)
+
   const shippingPaise = calcShipping(subtotalPaise)
-  const totalPaise = subtotalPaise + shippingPaise
+  const totalPaise = subtotalPaise - discountPaise + shippingPaise
   const selectedAddress = addresses.find((a) => a.id === selectedId)
+
+  async function applyCode() {
+    const code = codeInput.trim()
+    if (!code) return
+    setApplying(true)
+    setCodeError(null)
+    try {
+      const res = await fetch('/api/sales/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setCodeError(json.error ?? 'Could not apply code.')
+        setAppliedCode(null)
+        setDiscountPaise(0)
+      } else {
+        setAppliedCode(json.code)
+        setDiscountPaise(json.discountPaise)
+        setCodeInput(json.code)
+      }
+    } catch {
+      setCodeError('Network error. Please try again.')
+    } finally {
+      setApplying(false)
+    }
+  }
+
+  function removeCode() {
+    setAppliedCode(null)
+    setDiscountPaise(0)
+    setCodeInput('')
+    setCodeError(null)
+  }
 
   if (!isHydrated) {
     return <div className="min-h-screen" />
@@ -110,6 +155,7 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
         body: JSON.stringify({
           addressId: selectedId,
           items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+          ...(appliedCode ? { saleCode: appliedCode } : {}),
         }),
       })
       const json = await res.json()
@@ -339,12 +385,56 @@ export function CheckoutFlow({ addresses, userEmail, userName, userPhone }: Chec
 
             <Separator />
 
+            {/* Promo / sale code */}
+            <div className="space-y-2">
+              {appliedCode ? (
+                <div className="flex items-center justify-between border border-foreground/20 bg-secondary/40 px-3 py-2 text-sm">
+                  <span>
+                    Code <span className="font-medium">{appliedCode}</span> applied
+                  </span>
+                  <button
+                    type="button"
+                    onClick={removeCode}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={codeInput}
+                    onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyCode() } }}
+                    placeholder="Promo code"
+                    className="flex-1 border bg-background px-3 py-2 text-sm uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal focus:outline-none focus:border-foreground"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={applyCode}
+                    disabled={applying || !codeInput.trim()}
+                  >
+                    {applying ? 'Applying…' : 'Apply'}
+                  </Button>
+                </div>
+              )}
+              {codeError && <p className="text-xs text-destructive">{codeError}</p>}
+            </div>
+
             {/* Totals */}
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span>{formatPrice(subtotalPaise)}</span>
               </div>
+              {discountPaise > 0 && (
+                <div className="flex justify-between text-foreground">
+                  <span className="text-muted-foreground">Discount{appliedCode ? ` (${appliedCode})` : ''}</span>
+                  <span>−{formatPrice(discountPaise)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Shipping</span>
                 <span>{shippingPaise === 0 ? 'Free' : formatPrice(shippingPaise)}</span>
