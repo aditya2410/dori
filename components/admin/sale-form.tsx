@@ -11,6 +11,7 @@ interface Sale {
   id: string
   code: string
   description: string | null
+  banner_color: string | null
   discount_percent: number
   min_order_paise: number | null
   max_discount_paise: number | null
@@ -105,14 +106,30 @@ export function SaleForm({ sale }: SaleFormProps) {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="description">Description (optional)</Label>
+        <Label htmlFor="description">Banner text (optional)</Label>
         <Input
           id="description"
           name="description"
           defaultValue={sale?.description ?? ''}
-          placeholder="Launch offer — 10% off first order"
+          placeholder="Launch offer — 10% off your first order"
         />
-        <p className="text-xs text-muted-foreground">Internal note. Not shown to customers.</p>
+        <p className="text-xs text-muted-foreground">
+          Shown in the scrolling banner on the home page. Leave blank to auto-generate from the code and discount.
+        </p>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="banner_color">Banner color</Label>
+        <div className="flex items-center gap-3">
+          <input
+            id="banner_color"
+            name="banner_color"
+            type="color"
+            defaultValue={sale?.banner_color ?? '#1a1a1a'}
+            className="h-9 w-14 cursor-pointer rounded border bg-background p-1"
+          />
+          <span className="text-xs text-muted-foreground">Background of the home page banner. Text color adjusts automatically.</span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

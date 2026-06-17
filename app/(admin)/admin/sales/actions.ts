@@ -14,6 +14,7 @@ const saleSchema = z.object({
     .max(40)
     .regex(/^[A-Za-z0-9]+$/, 'Code must be letters and numbers only (no spaces).'),
   description: z.string().max(200).optional(),
+  banner_color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Pick a valid color.').optional(),
   discount_percent: z.coerce
     .number({ invalid_type_error: 'Enter a discount percentage.' })
     .int()
@@ -33,6 +34,7 @@ function toPaise(rupees: number | undefined): number | null {
 type SaleFields = {
   code: string
   description: string | null
+  banner_color: string | null
   discount_percent: number
   min_order_paise: number | null
   max_discount_paise: number | null
@@ -46,6 +48,7 @@ function parseSale(formData: FormData): { ok: true; fields: SaleFields } | { ok:
   const parsed = saleSchema.safeParse({
     code: formData.get('code'),
     description: formData.get('description') || undefined,
+    banner_color: formData.get('banner_color') || undefined,
     discount_percent: formData.get('discount_percent'),
     min_order: formData.get('min_order') || undefined,
     max_discount: formData.get('max_discount') || undefined,
@@ -65,6 +68,7 @@ function parseSale(formData: FormData): { ok: true; fields: SaleFields } | { ok:
     fields: {
       code: parsed.data.code,
       description: parsed.data.description ?? null,
+      banner_color: parsed.data.banner_color ?? null,
       discount_percent: parsed.data.discount_percent,
       min_order_paise: toPaise(parsed.data.min_order),
       max_discount_paise: toPaise(parsed.data.max_discount),

@@ -199,6 +199,7 @@ export interface Database {
           min_order_paise: number | null
           max_discount_paise: number | null
           usage_limit: number | null
+          banner_color: string | null
           starts_at: string
           ends_at: string
           is_active: boolean
@@ -213,6 +214,7 @@ export interface Database {
           min_order_paise?: number | null
           max_discount_paise?: number | null
           usage_limit?: number | null
+          banner_color?: string | null
           starts_at: string
           ends_at: string
           is_active?: boolean
@@ -227,6 +229,7 @@ export interface Database {
           min_order_paise?: number | null
           max_discount_paise?: number | null
           usage_limit?: number | null
+          banner_color?: string | null
           starts_at?: string
           ends_at?: string
           is_active?: boolean
