@@ -87,7 +87,7 @@ export default function LoginForm() {
             <input type="hidden" name="next" value={next} />
             <input type="hidden" name="email" value={email} />
             <p className="text-sm text-muted-foreground text-center">
-              We sent a 6-digit code to <span className="text-foreground">{email}</span>.
+              We sent a login code to <span className="text-foreground">{email}</span>.
             </p>
             <div className="space-y-1.5">
               <Label htmlFor="token">Login code</Label>
@@ -96,7 +96,7 @@ export default function LoginForm() {
                 name="token"
                 inputMode="numeric"
                 autoComplete="one-time-code"
-                placeholder="123456"
+                placeholder="Enter code"
                 className="tracking-[0.3em] text-center"
                 required
               />

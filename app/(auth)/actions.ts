@@ -114,7 +114,7 @@ export async function sendLoginCode(_prev: AuthState, formData: FormData): Promi
   })
 
   // Always return the same message — don't reveal whether the account exists.
-  return { message: 'If an account exists for that email, a 6-digit code is on its way.' }
+  return { message: 'If an account exists for that email, a login code is on its way.' }
 }
 
 export async function verifyLoginCode(_prev: AuthState, formData: FormData): Promise<AuthState> {
@@ -123,7 +123,7 @@ export async function verifyLoginCode(_prev: AuthState, formData: FormData): Pro
   const next = formData.get('next')
 
   if (!z.string().email().safeParse(email).success) return { error: 'Enter a valid email.' }
-  if (!token || token.length < 6) return { error: 'Enter the 6-digit code from your email.' }
+  if (!token || token.length < 4) return { error: 'Enter the code from your email.' }
 
   const supabase = await createClient()
   const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' })
