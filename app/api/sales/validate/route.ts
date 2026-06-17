@@ -13,9 +13,10 @@ const bodySchema = z.object({
 // Checkout preview: validate a code and return the discount. The authoritative
 // re-check happens again at order creation, so this is safe to expose.
 export async function POST(request: NextRequest) {
+  // Session optional — guests preview codes too. The per-user limit is enforced
+  // authoritatively at order creation once the account is resolved by email.
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   let body: unknown
   try {
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
   const priceMap = new Map(products.map((p) => [p.id, p]))
   const subtotalPaise = items.reduce((s, i) => s + (priceMap.get(i.productId)?.price_paise ?? 0) * i.quantity, 0)
 
-  const result = await computeSaleDiscount(service, code, user.id, subtotalPaise)
+  const result = await computeSaleDiscount(service, code, user?.id ?? null, subtotalPaise)
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
 
   return NextResponse.json({

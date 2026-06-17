@@ -18,7 +18,7 @@ export type DiscountResult =
 export async function computeSaleDiscount(
   service: Service,
   rawCode: string,
-  userId: string,
+  userId: string | null,
   subtotalPaise: number,
 ): Promise<DiscountResult> {
   const code = rawCode.trim()
@@ -54,15 +54,19 @@ export async function computeSaleDiscount(
     }
   }
 
-  // Once per user.
-  const { count: userCount } = await service
-    .from('orders')
-    .select('id', { count: 'exact', head: true })
-    .eq('sale_id', sale.id)
-    .eq('user_id', userId)
-    .neq('status', 'cancelled')
-  if ((userCount ?? 0) > 0) {
-    return { ok: false, error: 'You have already used this code.' }
+  // Once per user. Guests previewing a code at checkout have no account yet
+  // (userId null) — this is re-checked authoritatively at order creation once
+  // the account is resolved by email.
+  if (userId) {
+    const { count: userCount } = await service
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('sale_id', sale.id)
+      .eq('user_id', userId)
+      .neq('status', 'cancelled')
+    if ((userCount ?? 0) > 0) {
+      return { ok: false, error: 'You have already used this code.' }
+    }
   }
 
   let discountPaise = Math.floor((subtotalPaise * sale.discount_percent) / 100)
