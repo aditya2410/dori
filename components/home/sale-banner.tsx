@@ -43,9 +43,9 @@ export async function SaleBanner() {
   const reps = Math.max(2, Math.ceil(2400 / baseWidthPx))
   const copy = Array.from({ length: reps }).flatMap(() => messages)
 
-  // One copy scrolls past in copyWidth / speed seconds. ~2x the previous pace.
+  // Match the "Dori Family" strip speed (~60px/s = 1px/frame at 60fps).
   const copyWidthPx = reps * baseWidthPx
-  const durationSec = Math.max(8, Math.round(copyWidthPx / 100))
+  const durationSec = Math.max(8, Math.round(copyWidthPx / 60))
 
   return (
     <div className="overflow-hidden" style={{ backgroundColor: bg, color: fg }}>
