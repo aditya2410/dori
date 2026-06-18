@@ -49,5 +49,6 @@ export async function POST(request: NextRequest) {
     code: result.code,
     discountPercent: result.discountPercent,
     discountPaise: result.discountPaise,
+    freeShipping: result.freeShipping,
   })
 }

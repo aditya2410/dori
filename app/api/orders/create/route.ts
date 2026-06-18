@@ -168,14 +168,16 @@ export async function POST(request: NextRequest) {
   // ── Apply sale code (validated + computed server-side) ───────
   let discountPaise = 0
   let saleId: string | null = null
+  let freeShipping = false
   if (saleCode) {
     const result = await computeSaleDiscount(service, saleCode, userId, subtotalPaise)
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
     discountPaise = result.discountPaise
     saleId = result.saleId
+    freeShipping = result.freeShipping
   }
 
-  const shippingPaise = calcShipping(subtotalPaise)
+  const shippingPaise = freeShipping ? 0 : calcShipping(subtotalPaise)
   const totalPaise = subtotalPaise - discountPaise + shippingPaise
 
   // ── Create order ─────────────────────────────────────────────

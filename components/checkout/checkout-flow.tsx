@@ -69,10 +69,11 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
   const [codeInput, setCodeInput] = useState('')
   const [appliedCode, setAppliedCode] = useState<string | null>(null)
   const [discountPaise, setDiscountPaise] = useState(0)
+  const [freeShipping, setFreeShipping] = useState(false)
   const [codeError, setCodeError] = useState<string | null>(null)
   const [applying, setApplying] = useState(false)
 
-  const shippingPaise = calcShipping(subtotalPaise)
+  const shippingPaise = freeShipping ? 0 : calcShipping(subtotalPaise)
   const totalPaise = subtotalPaise - discountPaise + shippingPaise
 
   const reviewAddress = isGuest
@@ -103,6 +104,7 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
       } else {
         setAppliedCode(json.code)
         setDiscountPaise(json.discountPaise)
+        setFreeShipping(json.freeShipping ?? false)
         setCodeInput(json.code)
       }
     } catch {
@@ -115,6 +117,7 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
   function removeCode() {
     setAppliedCode(null)
     setDiscountPaise(0)
+    setFreeShipping(false)
     setCodeInput('')
     setCodeError(null)
   }
@@ -467,6 +470,7 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
                 <div className="flex items-center justify-between border border-foreground/20 bg-secondary/40 px-3 py-2 text-sm">
                   <span>
                     Code <span className="font-medium">{appliedCode}</span> applied
+                    {freeShipping && <span className="text-muted-foreground"> · free shipping</span>}
                   </span>
                   <button
                     type="button"

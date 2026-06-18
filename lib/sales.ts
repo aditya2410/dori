@@ -4,7 +4,7 @@ import { formatPrice } from '@/lib/utils'
 type Service = ReturnType<typeof createServiceClient>
 
 export type DiscountResult =
-  | { ok: true; saleId: string; code: string; discountPercent: number; discountPaise: number }
+  | { ok: true; saleId: string; code: string; discountPercent: number; discountPaise: number; freeShipping: boolean }
   | { ok: false; error: string }
 
 /**
@@ -81,5 +81,6 @@ export async function computeSaleDiscount(
     code: sale.code,
     discountPercent: sale.discount_percent,
     discountPaise,
+    freeShipping: sale.free_shipping,
   }
 }

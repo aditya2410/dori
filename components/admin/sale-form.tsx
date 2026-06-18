@@ -16,6 +16,7 @@ interface Sale {
   min_order_paise: number | null
   max_discount_paise: number | null
   usage_limit: number | null
+  free_shipping: boolean
   starts_at: string
   ends_at: string
   is_active: boolean
@@ -197,6 +198,19 @@ export function SaleForm({ sale }: SaleFormProps) {
             <p className="text-xs text-muted-foreground">Across all customers.</p>
           </div>
         </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <input
+          id="free_shipping"
+          name="free_shipping"
+          type="checkbox"
+          defaultChecked={sale?.free_shipping ?? false}
+          className="h-4 w-4 accent-foreground"
+        />
+        <Label htmlFor="free_shipping" className="normal-case text-sm font-normal tracking-normal">
+          Free shipping — waive the ₹150 shipping for orders using this code
+        </Label>
       </div>
 
       <div className="flex items-center gap-3">

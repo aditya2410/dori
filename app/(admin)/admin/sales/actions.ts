@@ -39,6 +39,7 @@ type SaleFields = {
   min_order_paise: number | null
   max_discount_paise: number | null
   usage_limit: number | null
+  free_shipping: boolean
   starts_at: string
   ends_at: string
   is_active: boolean
@@ -73,6 +74,7 @@ function parseSale(formData: FormData): { ok: true; fields: SaleFields } | { ok:
       min_order_paise: toPaise(parsed.data.min_order),
       max_discount_paise: toPaise(parsed.data.max_discount),
       usage_limit: parsed.data.usage_limit ?? null,
+      free_shipping: formData.get('free_shipping') === 'on',
       starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
       is_active: formData.get('is_active') === 'on',
