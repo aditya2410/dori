@@ -18,9 +18,19 @@ const guestSchema = z.object({
   pincode: z.string().min(1, 'Pincode is required.'),
 })
 
+const billingSchema = z.object({
+  full_name: z.string().min(1),
+  line1: z.string().min(1),
+  line2: z.string().optional(),
+  city: z.string().min(1),
+  state: z.string().min(1),
+  pincode: z.string().min(1),
+})
+
 const bodySchema = z.object({
   addressId: z.string().uuid().optional(),
   guest: guestSchema.optional(),
+  billing: billingSchema.optional(),
   items: z
     .array(
       z.object({
@@ -49,7 +59,10 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
   }
-  const { addressId, guest, items, saleCode } = parsed.data
+  const { addressId, guest, billing, items, saleCode } = parsed.data
+  const billingAddress = billing
+    ? ({ ...billing, line2: billing.line2 ?? undefined, country: 'IN' } as unknown as Json)
+    : null
 
   const supabase = await createClient()
   const {
@@ -194,6 +207,7 @@ export async function POST(request: NextRequest) {
       sale_id: saleId,
       total_paise: totalPaise,
       shipping_address: shippingAddress as unknown as Json,
+      billing_address: billingAddress,
     })
     .select('id')
     .single()

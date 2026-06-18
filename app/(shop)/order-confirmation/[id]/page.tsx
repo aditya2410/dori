@@ -6,7 +6,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { formatPrice } from '@/lib/utils'
-import type { ShippingAddress } from '@/types/database.types'
+import type { ShippingAddress, BillingAddress } from '@/types/database.types'
 
 export const metadata: Metadata = { title: 'Order Confirmed' }
 
@@ -38,6 +38,7 @@ export default async function OrderConfirmationPage({
     .eq('order_id', id)
 
   const addr = order.shipping_address as unknown as ShippingAddress
+  const billing = order.billing_address as unknown as BillingAddress | null
 
   return (
     <div className="container py-16 max-w-xl">
@@ -105,6 +106,21 @@ export default async function OrderConfirmationPage({
           </p>
           {addr.phone && <p className="text-muted-foreground">{addr.phone}</p>}
         </div>
+
+        {billing && (
+          <>
+            <Separator />
+            <div className="space-y-1 text-sm">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Billing address</p>
+              <p className="font-medium">{billing.full_name}</p>
+              <p className="text-muted-foreground">{billing.line1}</p>
+              {billing.line2 && <p className="text-muted-foreground">{billing.line2}</p>}
+              <p className="text-muted-foreground">
+                {billing.city}, {billing.state} {billing.pincode}
+              </p>
+            </div>
+          </>
+        )}
 
         <Separator />
 

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { formatPrice } from '@/lib/utils'
-import type { OrderStatus, ShippingAddress } from '@/types/database.types'
+import type { OrderStatus, ShippingAddress, BillingAddress } from '@/types/database.types'
 
 export const metadata: Metadata = { title: 'Order Detail' }
 
@@ -67,6 +67,7 @@ export default async function OrderDetailPage({
   if (!order) notFound()
 
   const addr = order.shipping_address as unknown as ShippingAddress
+  const billing = order.billing_address as unknown as BillingAddress | null
   const isBad = TERMINAL_BAD.includes(order.status as OrderStatus)
 
   return (
@@ -192,6 +193,18 @@ export default async function OrderDetailPage({
         </p>
         {addr.phone && <p className="text-muted-foreground">{addr.phone}</p>}
       </div>
+
+      {billing && (
+        <div className="space-y-1 text-sm">
+          <h2 className="font-serif text-xl font-normal mb-3">Billing Address</h2>
+          <p className="font-medium">{billing.full_name}</p>
+          <p className="text-muted-foreground">{billing.line1}</p>
+          {billing.line2 && <p className="text-muted-foreground">{billing.line2}</p>}
+          <p className="text-muted-foreground">
+            {billing.city}, {billing.state} {billing.pincode}
+          </p>
+        </div>
+      )}
     </div>
   )
 }

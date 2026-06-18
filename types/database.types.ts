@@ -31,6 +31,16 @@ export interface ShippingAddress {
   contact_email?: string
 }
 
+export interface BillingAddress {
+  full_name: string
+  line1: string
+  line2?: string
+  city: string
+  state: string
+  pincode: string
+  country: string
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -377,6 +387,7 @@ export interface Database {
           sale_id: string | null
           total_paise: number
           shipping_address: Json
+          billing_address: Json | null
           tracking_number: string | null
           razorpay_order_id: string | null
           razorpay_payment_id: string | null
@@ -396,6 +407,7 @@ export interface Database {
           sale_id?: string | null
           total_paise: number
           shipping_address: Json
+          billing_address?: Json | null
           tracking_number?: string | null
           razorpay_order_id?: string | null
           razorpay_payment_id?: string | null
@@ -415,6 +427,7 @@ export interface Database {
           sale_id?: string | null
           total_paise?: number
           shipping_address?: Json
+          billing_address?: Json | null
           tracking_number?: string | null
           razorpay_order_id?: string | null
           razorpay_payment_id?: string | null
