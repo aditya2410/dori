@@ -43,7 +43,7 @@ const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 
 export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhone }: CheckoutFlowProps) {
   const router = useRouter()
-  const { items, totalPaise: subtotalPaise, clearCart, isHydrated } = useCart()
+  const { items, totalPaise: subtotalPaise, clearCart, removeItem, isHydrated } = useCart()
 
   const [selectedId, setSelectedId] = useState<string>(
     addresses.find((a) => a.is_default)?.id ?? addresses[0]?.id ?? '',
@@ -444,12 +444,19 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
                   <div className="h-full bg-secondary" />
                 )}
               </div>
-              <div className="flex-1 flex justify-between text-sm">
+              <div className="flex-1 flex justify-between gap-3 text-sm">
                 <div>
                   <p className="font-medium">{item.name}</p>
                   <p className="text-muted-foreground">Qty: {item.quantity}</p>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.productId)}
+                    className="mt-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    Remove
+                  </button>
                 </div>
-                <p className="font-medium">{formatPrice(item.pricePaise * item.quantity)}</p>
+                <p className="font-medium whitespace-nowrap">{formatPrice(item.pricePaise * item.quantity)}</p>
               </div>
             </div>
           ))}
