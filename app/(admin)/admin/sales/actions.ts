@@ -23,6 +23,7 @@ const saleSchema = z.object({
   min_order: z.coerce.number().min(0).optional(),
   max_discount: z.coerce.number().min(0).optional(),
   usage_limit: z.coerce.number().int().positive().optional(),
+  free_shipping_limit: z.coerce.number().int().positive().optional(),
   starts_at: z.string().min(1, 'Start date is required.'),
   ends_at: z.string().min(1, 'End date is required.'),
 })
@@ -40,6 +41,7 @@ type SaleFields = {
   max_discount_paise: number | null
   usage_limit: number | null
   free_shipping: boolean
+  free_shipping_limit: number | null
   starts_at: string
   ends_at: string
   is_active: boolean
@@ -54,10 +56,13 @@ function parseSale(formData: FormData): { ok: true; fields: SaleFields } | { ok:
     min_order: formData.get('min_order') || undefined,
     max_discount: formData.get('max_discount') || undefined,
     usage_limit: formData.get('usage_limit') || undefined,
+    free_shipping_limit: formData.get('free_shipping_limit') || undefined,
     starts_at: formData.get('starts_at'),
     ends_at: formData.get('ends_at'),
   })
   if (!parsed.success) return { ok: false, error: parsed.error.errors[0].message }
+
+  const freeShipping = formData.get('free_shipping') === 'on'
 
   const startsAt = new Date(parsed.data.starts_at)
   const endsAt = new Date(parsed.data.ends_at)
@@ -74,7 +79,8 @@ function parseSale(formData: FormData): { ok: true; fields: SaleFields } | { ok:
       min_order_paise: toPaise(parsed.data.min_order),
       max_discount_paise: toPaise(parsed.data.max_discount),
       usage_limit: parsed.data.usage_limit ?? null,
-      free_shipping: formData.get('free_shipping') === 'on',
+      free_shipping: freeShipping,
+      free_shipping_limit: freeShipping ? (parsed.data.free_shipping_limit ?? null) : null,
       starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
       is_active: formData.get('is_active') === 'on',

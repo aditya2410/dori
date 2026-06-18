@@ -204,6 +204,7 @@ export interface Database {
           usage_limit: number | null
           banner_color: string | null
           free_shipping: boolean
+          free_shipping_limit: number | null
           starts_at: string
           ends_at: string
           is_active: boolean
@@ -220,6 +221,7 @@ export interface Database {
           usage_limit?: number | null
           banner_color?: string | null
           free_shipping?: boolean
+          free_shipping_limit?: number | null
           starts_at: string
           ends_at: string
           is_active?: boolean
@@ -236,6 +238,7 @@ export interface Database {
           usage_limit?: number | null
           banner_color?: string | null
           free_shipping?: boolean
+          free_shipping_limit?: number | null
           starts_at?: string
           ends_at?: string
           is_active?: boolean

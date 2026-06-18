@@ -17,6 +17,7 @@ interface Sale {
   max_discount_paise: number | null
   usage_limit: number | null
   free_shipping: boolean
+  free_shipping_limit: number | null
   starts_at: string
   ends_at: string
   is_active: boolean
@@ -200,17 +201,32 @@ export function SaleForm({ sale }: SaleFormProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <input
-          id="free_shipping"
-          name="free_shipping"
-          type="checkbox"
-          defaultChecked={sale?.free_shipping ?? false}
-          className="h-4 w-4 accent-foreground"
-        />
-        <Label htmlFor="free_shipping" className="normal-case text-sm font-normal tracking-normal">
-          Free shipping — waive the ₹150 shipping for orders using this code
-        </Label>
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <input
+            id="free_shipping"
+            name="free_shipping"
+            type="checkbox"
+            defaultChecked={sale?.free_shipping ?? false}
+            className="h-4 w-4 accent-foreground"
+          />
+          <Label htmlFor="free_shipping" className="normal-case text-sm font-normal tracking-normal">
+            Free shipping — waive the ₹150 shipping for orders using this code
+          </Label>
+        </div>
+        <div className="space-y-1.5 max-w-[220px] pl-7">
+          <Label htmlFor="free_shipping_limit">Free shipping for first…</Label>
+          <Input
+            id="free_shipping_limit"
+            name="free_shipping_limit"
+            type="number"
+            min="1"
+            step="1"
+            defaultValue={sale?.free_shipping_limit ?? ''}
+            placeholder="All orders"
+          />
+          <p className="text-xs text-muted-foreground">Number of orders that get free shipping. Blank = every order using the code.</p>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">

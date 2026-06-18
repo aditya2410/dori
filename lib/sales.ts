@@ -75,12 +75,26 @@ export async function computeSaleDiscount(
 
   if (discountPaise <= 0) return { ok: false, error: 'This code gives no discount on your order.' }
 
+  // Free shipping has its own cap, independent of usage_limit. Orders that got
+  // free shipping have shipping_paise = 0; once the limit is hit, later orders
+  // still get the discount but pay shipping.
+  let freeShipping = sale.free_shipping
+  if (freeShipping && sale.free_shipping_limit != null) {
+    const { count } = await service
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('sale_id', sale.id)
+      .neq('status', 'cancelled')
+      .eq('shipping_paise', 0)
+    if ((count ?? 0) >= sale.free_shipping_limit) freeShipping = false
+  }
+
   return {
     ok: true,
     saleId: sale.id,
     code: sale.code,
     discountPercent: sale.discount_percent,
     discountPaise,
-    freeShipping: sale.free_shipping,
+    freeShipping,
   }
 }

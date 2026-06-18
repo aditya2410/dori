@@ -84,7 +84,9 @@ export default async function AdminSalesPage() {
                     <td className="p-4 text-muted-foreground">
                       {sale.discount_percent}% off
                       {sale.free_shipping && (
-                        <span className="block text-xs">+ free shipping</span>
+                        <span className="block text-xs">
+                          + free shipping{sale.free_shipping_limit != null ? ` (first ${sale.free_shipping_limit})` : ''}
+                        </span>
                       )}
                       {sale.max_discount_paise != null && (
                         <span className="block text-xs">up to {formatPrice(sale.max_discount_paise)}</span>
