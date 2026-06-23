@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Hero } from '@/components/home/hero'
 import { BestSellers } from '@/components/home/best-sellers'
 import { CommunityBanner } from '@/components/home/community-banner'
-import { SaleBanner } from '@/components/home/sale-banner'
 import { createServiceClient } from '@/lib/supabase/server'
 
 // Refresh periodically so scheduled sales appear/expire near their start/end
@@ -24,7 +23,6 @@ export default async function HomePage() {
 
   return (
     <>
-      <SaleBanner />
       <Hero />
       <BestSellers />
       <CommunityBanner photos={communityPhotos ?? []} />

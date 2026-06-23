@@ -100,7 +100,7 @@ export async function createSale(_prev: SaleState, formData: FormData): Promise<
   }
 
   revalidatePath('/admin/sales')
-  revalidatePath('/')
+  revalidatePath('/', 'layout')
   redirect('/admin/sales')
 }
 
@@ -116,18 +116,18 @@ export async function updateSale(saleId: string, _prev: SaleState, formData: For
   }
 
   revalidatePath('/admin/sales')
-  revalidatePath('/')
+  revalidatePath('/', 'layout')
   redirect('/admin/sales')
 }
 
 export async function toggleSaleActive(saleId: string, newActive: boolean): Promise<void> {
   await createServiceClient().from('sales').update({ is_active: newActive }).eq('id', saleId)
   revalidatePath('/admin/sales')
-  revalidatePath('/')
+  revalidatePath('/', 'layout')
 }
 
 export async function deleteSale(saleId: string): Promise<void> {
   await createServiceClient().from('sales').delete().eq('id', saleId)
   revalidatePath('/admin/sales')
-  revalidatePath('/')
+  revalidatePath('/', 'layout')
 }
