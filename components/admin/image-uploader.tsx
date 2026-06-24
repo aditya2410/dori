@@ -133,7 +133,7 @@ export function ImageUploader({ existingImages, onChange }: ImageUploaderProps) 
               className="relative size-24 border bg-secondary overflow-hidden shrink-0 cursor-grab active:cursor-grabbing"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt={`Product image ${i + 1}`} className="h-full w-full object-cover" />
+              <img src={url} alt={`Product image ${i + 1}`} draggable={false} className="h-full w-full object-cover" />
               <div className="absolute top-1 left-1 text-background/80 pointer-events-none">
                 <GripVertical className="size-3" />
               </div>

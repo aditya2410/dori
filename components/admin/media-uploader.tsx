@@ -146,10 +146,10 @@ export function MediaUploader({ existing, onChange }: MediaUploaderProps) {
             >
               {item.type === 'image' ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.url} alt={`Media ${i + 1}`} className="h-full w-full object-cover" />
+                <img src={item.url} alt={`Media ${i + 1}`} draggable={false} className="h-full w-full object-cover" />
               ) : (
                 <>
-                  <video src={item.url} muted playsInline preload="metadata" className="h-full w-full object-cover" />
+                  <video src={item.url} muted playsInline preload="metadata" draggable={false} className="h-full w-full object-cover" />
                   <span className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
                     <Play className="size-5 text-white fill-white" />
                   </span>
