@@ -2,19 +2,19 @@
 
 import { useRef, useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import { Reveal } from '@/components/reveal'
 import { use3DSupport } from '@/lib/use-3d-support'
 
 const CraftPearl = dynamic(() => import('./craft-pearl').then((m) => m.CraftPearl), { ssr: false })
 
-/**
- * Scroll-pinned 3D section. As the user scrolls through it, a giant
- * pearl rotates and a typographic story reveals line by line. The
- * background subtly darkens to give the section its own emotional
- * register, separate from the warm cream of the rest of the page.
- *
- * Pure scroll-progress driven (no GSAP / motion library).
- */
+interface CraftSectionProps {
+  /** Featured product image URL (e.g. first bestseller's cover photo) */
+  productImage: string
+  /** Display name of the featured product */
+  productName: string
+}
+
 const LINES = [
   'A single pearl',
   'becomes a knot,',
@@ -23,10 +23,10 @@ const LINES = [
   'that outlasts us.',
 ]
 
-export function CraftSection() {
+export function CraftSection({ productImage, productName }: CraftSectionProps) {
   const supports3D = use3DSupport()
   const ref = useRef<HTMLDivElement>(null)
-  const [progress, setProgress] = useState(0) // 0..1
+  const [progress, setProgress] = useState(0)
 
   useEffect(() => {
     function onScroll() {
@@ -34,8 +34,6 @@ export function CraftSection() {
       if (!el) return
       const rect = el.getBoundingClientRect()
       const vh = window.innerHeight
-      // Track from when the section's top hits the bottom (start)
-      // to when its bottom hits the top (end).
       const total = rect.height + vh
       const passed = vh - rect.top
       setProgress(Math.max(0, Math.min(1, passed / total)))
@@ -49,10 +47,9 @@ export function CraftSection() {
     }
   }, [])
 
-  // Map progress to per-line opacity, revealing each in turn.
   // Bias the curve so the first line lights up early and the last
-  // line completes well before progress hits 1.0 (the section's tail
-  // is mostly the gradient hand-off, not active scroll content).
+  // line completes well before progress hits 1.0 (the tail of the
+  // section is just the gradient hand-off, not active scroll content).
   const eased = Math.min(1, Math.max(0, (progress - 0.05) / 0.55))
   const activeIndex = Math.min(LINES.length - 1, Math.floor(eased * LINES.length))
 
@@ -63,23 +60,39 @@ export function CraftSection() {
       className="relative bg-[#13100e] text-[#f5e6c4] overflow-hidden"
       style={{ minHeight: '180vh' }}
     >
-      {/* Sticky stage */}
       <div className="sticky top-0 h-svh flex items-center justify-center">
-        {/* 3D pearl on the left half (desktop) */}
+        {/* 3D pearl-and-product centerpiece */}
         <div className="absolute inset-0">
           {supports3D ? (
-            <CraftPearl progress={progress} />
-          ) : (
-            // 2D fallback: a stylised radial gold halo
-            <div
-              aria-hidden
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 size-[60vmin] rounded-full"
-              style={{
-                background:
-                  'radial-gradient(circle at 35% 35%, #fff5e1 0%, #e9d8a6 28%, #caa472 52%, transparent 70%)',
-                filter: 'blur(2px)',
-              }}
+            <CraftPearl
+              progress={progress}
+              productImage={productImage}
+              productName={productName}
             />
+          ) : (
+            // 2D fallback: the same product photo with a warm halo.
+            <div className="absolute inset-0 flex items-center justify-center md:justify-start md:pl-[10%]">
+              <div className="relative size-[60vmin] max-w-[440px]">
+                <div
+                  aria-hidden
+                  className="absolute -inset-8 rounded-full"
+                  style={{
+                    background:
+                      'radial-gradient(circle at 50% 50%, rgba(245,230,196,0.35) 0%, rgba(202,164,114,0.15) 45%, transparent 70%)',
+                    filter: 'blur(8px)',
+                  }}
+                />
+                <div className="relative aspect-[3/4] overflow-hidden rounded-sm">
+                  <Image
+                    src={productImage}
+                    alt={productName}
+                    fill
+                    sizes="60vmin"
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+            </div>
           )}
         </div>
 
@@ -110,5 +123,4 @@ export function CraftSection() {
   )
 }
 
-// Re-export Reveal so home page can import everything from one entry.
 export { Reveal }

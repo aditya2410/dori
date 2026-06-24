@@ -1,114 +1,109 @@
 'use client'
 
-import { useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { useRef, useMemo } from 'react'
+import { Canvas, useFrame, useLoader } from '@react-three/fiber'
 import * as THREE from 'three'
 
+interface CraftPearlProps {
+  progress: number
+  productImage: string
+  productName: string
+}
+
 /**
- * The hero crystal — a large faceted icosahedron that catches light
- * like a cut crystal bead. As the user scrolls through the Craft
- * section, it slowly rotates and grows.
+ * Central product card — a softly-tilting plane that shows the actual
+ * product photograph (a Dori piece). Replaces the previous abstract
+ * "crystal core" so the centerpiece is something the customer can
+ * recognise and want.
  */
-function CrystalCore({ progress }: { progress: number }) {
+function ProductCard({
+  productImage,
+  progress,
+}: {
+  productImage: string
+  progress: number
+}) {
+  const texture = useLoader(THREE.TextureLoader, productImage)
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.anisotropy = 8
+
   const mesh = useRef<THREE.Mesh>(null)
   useFrame((state, delta) => {
     if (!mesh.current) return
-    mesh.current.rotation.y += delta * 0.18 + progress * 0.015
-    mesh.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.25) * 0.18 + progress * 0.55
-    const s = 1 + progress * 0.3
+    mesh.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.25) * 0.18 + progress * 0.35
+    mesh.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.2) * 0.06
+    const s = 1 + progress * 0.15
     mesh.current.scale.set(s, s, s)
+    // Slow vertical bob to feel alive.
+    mesh.current.position.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.08
+    mesh.current.position.x = -1.4
   })
+
+  // Product images are roughly 3:4 portrait.
   return (
-    <mesh ref={mesh} position={[-1.6, 0, 0]}>
-      {/* Faceted icosahedron — the bead's signature geometry */}
-      <icosahedronGeometry args={[1.55, 1]} />
-      <meshPhysicalMaterial
-        color="#ffffff"
-        roughness={0.05}
-        metalness={0.0}
-        transmission={0.95}
-        thickness={1.6}
-        ior={1.7}
-        attenuationColor="#dcc9a6"
-        attenuationDistance={2.4}
-        clearcoat={1}
-        clearcoatRoughness={0.05}
-        iridescence={0.9}
-        iridescenceIOR={1.5}
-        iridescenceThicknessRange={[120, 900]}
-        specularIntensity={1}
-        envMapIntensity={1.4}
-      />
-    </mesh>
+    <group>
+      {/* Soft warm halo behind the card */}
+      <mesh position={[-1.4, 0, -0.4]}>
+        <circleGeometry args={[2.4, 64]} />
+        <meshBasicMaterial color="#f5e6c4" transparent opacity={0.18} />
+      </mesh>
+      <mesh ref={mesh}>
+        <planeGeometry args={[2.1, 2.8]} />
+        <meshStandardMaterial
+          map={texture}
+          roughness={0.55}
+          metalness={0.05}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    </group>
   )
 }
 
 /**
- * Constellation of orbiting crystal beads — assorted faceted shapes
- * (octahedra, icosahedra, dodecahedra) to read as "bead workshop"
- * rather than uniform pearls.
+ * A tight ring of warm pearls orbiting the product card. Soft cream
+ * spheres only (no faceted geometry, no glass) so the look matches
+ * the brand's pearl-bag aesthetic — not a sci-fi galaxy.
  */
-function BeadConstellation({ progress }: { progress: number }) {
+function PearlRing({ progress }: { progress: number }) {
   const group = useRef<THREE.Group>(null)
+
+  const pearls = useMemo(
+    () =>
+      Array.from({ length: 18 }, (_, i) => {
+        const a = (i / 18) * Math.PI * 2
+        // Tight elliptical orbit, mostly behind / around the card.
+        const r = 2.2 + Math.sin(i * 1.7) * 0.15
+        const y = Math.sin(i * 1.3) * 0.6
+        return {
+          pos: [Math.cos(a) * r - 1.4, y, Math.sin(a) * r * 0.55] as [number, number, number],
+          scale: 0.11 + (i % 4) * 0.025,
+          tint: ['#f5e6c4', '#fff5e1', '#e9d8a6', '#caa472'][i % 4],
+        }
+      }),
+    []
+  )
+
   useFrame((state) => {
     if (!group.current) return
-    group.current.rotation.y = state.clock.elapsedTime * 0.06 + progress * 1.4
-    group.current.rotation.x = progress * 0.5
-  })
-
-  const beads = Array.from({ length: 44 }, (_, i) => {
-    const a = (i / 44) * Math.PI * 2
-    const r = 2.6 + Math.sin(i * 7.3) * 0.5
-    const y = Math.sin(i * 2.1) * 1.1
-    return {
-      pos: [Math.cos(a) * r - 1.6, y, Math.sin(a) * r] as [number, number, number],
-      scale: 0.09 + (i % 5) * 0.022,
-      shape: i % 3, // 0=octa, 1=icosa, 2=dodec
-      tint: ['#f5e6c4', '#ffffff', '#e9d8a6', '#caa472', '#fff5e1'][i % 5],
-      spinAxis: (i % 2) as 0 | 1,
-    }
-  })
-
-  const refs = useRef<(THREE.Mesh | null)[]>([])
-  useFrame((_, delta) => {
-    for (let i = 0; i < beads.length; i++) {
-      const m = refs.current[i]
-      if (!m) continue
-      if (beads[i].spinAxis === 0) m.rotation.y += delta * 0.6
-      else m.rotation.x += delta * 0.5
-    }
+    // Slow, single-direction drift. No frantic spin.
+    group.current.rotation.y = state.clock.elapsedTime * 0.08 + progress * 0.5
   })
 
   return (
     <group ref={group}>
-      {beads.map((b, i) => (
-        <mesh
-          key={i}
-          ref={(el) => {
-            refs.current[i] = el
-          }}
-          position={b.pos}
-          scale={b.scale}
-        >
-          {b.shape === 0 ? (
-            <octahedronGeometry args={[1, 0]} />
-          ) : b.shape === 1 ? (
-            <icosahedronGeometry args={[1, 0]} />
-          ) : (
-            <dodecahedronGeometry args={[1, 0]} />
-          )}
+      {pearls.map((p, i) => (
+        <mesh key={i} position={p.pos} scale={p.scale}>
+          <sphereGeometry args={[1, 32, 32]} />
           <meshPhysicalMaterial
-            color={b.tint}
-            roughness={0.08}
-            metalness={0.1}
-            transmission={0.7}
-            thickness={0.6}
-            ior={1.55}
-            clearcoat={1}
-            clearcoatRoughness={0.1}
-            iridescence={0.5}
-            iridescenceIOR={1.4}
-            envMapIntensity={1.2}
+            color={p.tint}
+            roughness={0.22}
+            metalness={0.15}
+            clearcoat={0.7}
+            clearcoatRoughness={0.25}
+            iridescence={0.35}
+            iridescenceIOR={1.3}
+            envMapIntensity={1.0}
           />
         </mesh>
       ))}
@@ -116,10 +111,10 @@ function BeadConstellation({ progress }: { progress: number }) {
   )
 }
 
-export function CraftPearl({ progress }: { progress: number }) {
+export function CraftPearl({ progress, productImage, productName }: CraftPearlProps) {
   return (
     <Canvas
-      camera={{ position: [0, 0, 5.5], fov: 45 }}
+      camera={{ position: [0, 0, 5.2], fov: 42 }}
       dpr={[1, 2]}
       gl={{
         antialias: true,
@@ -128,14 +123,14 @@ export function CraftPearl({ progress }: { progress: number }) {
         toneMapping: THREE.ACESFilmicToneMapping,
       }}
       style={{ width: '100%', height: '100%' }}
+      aria-label={`A floating Dori ${productName} surrounded by pearls`}
     >
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[3, 4, 5]} intensity={2.0} color="#fff4dc" />
-      <pointLight position={[-4, -2, 3]} intensity={1.4} color="#caa472" />
-      <pointLight position={[3, 2, -4]} intensity={1.0} color="#f5e6c4" />
-      <pointLight position={[0, -3, 2]} intensity={0.6} color="#ffffff" />
-      <CrystalCore progress={progress} />
-      <BeadConstellation progress={progress} />
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[3, 4, 5]} intensity={1.4} color="#fff4dc" />
+      <pointLight position={[-3, -2, 3]} intensity={0.8} color="#caa472" />
+      <pointLight position={[3, 2, -2]} intensity={0.5} color="#f5e6c4" />
+      <ProductCard productImage={productImage} progress={progress} />
+      <PearlRing progress={progress} />
     </Canvas>
   )
 }
