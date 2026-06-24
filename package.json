@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "textures": "tsx scripts/generate-textures.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.2",
@@ -23,6 +24,8 @@
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.2",
     "@radix-ui/react-toast": "^1.2.4",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.0",
     "@tiptap/extension-placeholder": "^3.25.0",
@@ -40,17 +43,20 @@
     "react-dom": "^19.0.0",
     "resend": "^4.0.0",
     "tailwind-merge": "^2.6.0",
+    "three": "^0.171.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
+    "@types/three": "^0.171.0",
     "autoprefixer": "^10.4.20",
     "dotenv": "^16.4.7",
     "eslint": "^9.18.0",
     "eslint-config-next": "^15.1.0",
     "postcss": "^8.5.1",
+    "puppeteer-core": "^23.11.1",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "tsx": "^4.19.2",

@@ -21,6 +21,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: BASE,                              changeFrequency: 'daily',   priority: 1.0 },
     { url: `${BASE}/products`,                changeFrequency: 'daily',   priority: 0.9 },
     { url: `${BASE}/collections`,             changeFrequency: 'weekly',  priority: 0.7 },
+    // Immersive 3D showroom — indexable but low priority; the 2D product pages
+    // remain the canonical destination for crawling and checkout.
+    { url: `${BASE}/experience`,              changeFrequency: 'monthly', priority: 0.4 },
     { url: `${BASE}/about`,                   changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE}/contact`,                 changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE}/shipping-policy`,         changeFrequency: 'monthly', priority: 0.3 },
