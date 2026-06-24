@@ -5,6 +5,7 @@ import { CommunityBanner } from '@/components/home/community-banner'
 import { CraftSection } from '@/components/home/craft-section'
 import { MarqueeWords } from '@/components/home/marquee-words'
 import { Reveal } from '@/components/reveal'
+import { ScrollTilt3D } from '@/components/scroll-tilt-3d'
 import { createServiceClient } from '@/lib/supabase/server'
 
 export const revalidate = 600
@@ -31,13 +32,17 @@ export default async function HomePage() {
 
       <CraftSection />
 
-      <Reveal effect="up">
-        <BestSellers />
-      </Reveal>
+      <ScrollTilt3D intensity={6} direction="both">
+        <Reveal effect="up">
+          <BestSellers />
+        </Reveal>
+      </ScrollTilt3D>
 
-      <Reveal effect="fade">
-        <CommunityBanner photos={communityPhotos ?? []} />
-      </Reveal>
+      <ScrollTilt3D intensity={5} direction="both">
+        <Reveal effect="scale">
+          <CommunityBanner photos={communityPhotos ?? []} />
+        </Reveal>
+      </ScrollTilt3D>
     </>
   )
 }

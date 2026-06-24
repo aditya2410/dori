@@ -31,10 +31,18 @@ function FabricPlane({ texture }: { texture: THREE.Texture }) {
         void main() {
           vUv = uv;
           vec3 p = position;
+          // Radial mask centered on the subject (the woman in the
+          // photo, roughly the center of the frame). Ripple is strong
+          // in the middle and falls to zero at the edges so the rest
+          // of the image stays calm.
+          vec2 c = vec2(0.5, 0.5);
+          float d = distance(uv, c);
+          float mask = 1.0 - smoothstep(0.18, 0.55, d);
           float w =
             sin(p.x * uFreq + uTime * 0.7) * 0.5 +
             cos(p.y * uFreq * 0.8 + uTime * 0.6) * 0.5;
-          p.z += w * uAmp;
+          p.z += w * uAmp * mask;
+          p.x += sin(uTime * 0.4 + p.y * 1.2) * 0.015 * mask;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
         }
       `,

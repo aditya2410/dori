@@ -50,7 +50,11 @@ export function CraftSection() {
   }, [])
 
   // Map progress to per-line opacity, revealing each in turn.
-  const activeIndex = Math.min(LINES.length - 1, Math.floor(progress * (LINES.length + 0.5)))
+  // Bias the curve so the first line lights up early and the last
+  // line completes well before progress hits 1.0 (the section's tail
+  // is mostly the gradient hand-off, not active scroll content).
+  const eased = Math.min(1, Math.max(0, (progress - 0.05) / 0.55))
+  const activeIndex = Math.min(LINES.length - 1, Math.floor(eased * LINES.length))
 
   return (
     <section
