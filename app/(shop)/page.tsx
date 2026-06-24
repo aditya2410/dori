@@ -69,12 +69,7 @@ export default async function HomePage() {
 
       <MarqueeWords />
 
-      {craftFeatured && (
-        <CraftSection
-          productImage={craftFeatured.url}
-          productName={craftFeatured.name}
-        />
-      )}
+      <CraftSection />
 
       <ScrollTilt3D intensity={6} direction="both">
         <Reveal effect="up">

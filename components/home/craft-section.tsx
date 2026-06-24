@@ -2,18 +2,10 @@
 
 import { useRef, useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
-import Image from 'next/image'
 import { Reveal } from '@/components/reveal'
 import { use3DSupport } from '@/lib/use-3d-support'
 
 const CraftPearl = dynamic(() => import('./craft-pearl').then((m) => m.CraftPearl), { ssr: false })
-
-interface CraftSectionProps {
-  /** Featured product image URL (e.g. first bestseller's cover photo) */
-  productImage: string
-  /** Display name of the featured product */
-  productName: string
-}
 
 const LINES = [
   'A single pearl',
@@ -23,7 +15,7 @@ const LINES = [
   'that outlasts us.',
 ]
 
-export function CraftSection({ productImage, productName }: CraftSectionProps) {
+export function CraftSection() {
   const supports3D = use3DSupport()
   const ref = useRef<HTMLDivElement>(null)
   const [progress, setProgress] = useState(0)
@@ -47,9 +39,6 @@ export function CraftSection({ productImage, productName }: CraftSectionProps) {
     }
   }, [])
 
-  // Bias the curve so the first line lights up early and the last
-  // line completes well before progress hits 1.0 (the tail of the
-  // section is just the gradient hand-off, not active scroll content).
   const eased = Math.min(1, Math.max(0, (progress - 0.05) / 0.55))
   const activeIndex = Math.min(LINES.length - 1, Math.floor(eased * LINES.length))
 
@@ -61,41 +50,32 @@ export function CraftSection({ productImage, productName }: CraftSectionProps) {
       style={{ minHeight: '180vh' }}
     >
       <div className="sticky top-0 h-svh flex items-center justify-center">
-        {/* Always-on 2D product image base layer (also acts as fallback). */}
-        <div className="absolute inset-0 flex items-center justify-center md:justify-start md:pl-[8%]">
-          <div className="relative size-[55vmin] max-w-[460px] aspect-[3/4] opacity-95">
-            <div
-              aria-hidden
-              className="absolute -inset-10 rounded-full"
-              style={{
-                background:
-                  'radial-gradient(circle at 50% 50%, rgba(245,230,196,0.35) 0%, rgba(202,164,114,0.15) 45%, transparent 70%)',
-                filter: 'blur(8px)',
-              }}
-            />
-            <Image
-              src={productImage}
-              alt={productName}
-              fill
-              sizes="55vmin"
-              className="object-contain"
-              priority
-            />
-          </div>
-        </div>
-
-        {/* 3D pearl-and-product enhancement layer (transparent canvas) */}
-        {supports3D && (
+        {supports3D ? (
           <div className="absolute inset-0" data-testid="craft-3d-canvas">
-            <CraftPearl
-              progress={progress}
-              productImage={productImage}
-              productName={productName}
-            />
+            <CraftPearl progress={progress} />
+          </div>
+        ) : (
+          // 2D fallback: a soft warm halo with a stylised bag-shaped
+          // silhouette built in pure CSS — keeps the bag-shop vibe.
+          <div
+            aria-hidden
+            className="absolute inset-0 flex items-center justify-center md:justify-start md:pl-[10%]"
+          >
+            <div className="relative size-[55vmin] max-w-[440px]">
+              <div
+                className="absolute -inset-10 rounded-full"
+                style={{
+                  background:
+                    'radial-gradient(circle at 50% 50%, rgba(245,230,196,0.35) 0%, rgba(202,164,114,0.15) 45%, transparent 70%)',
+                  filter: 'blur(8px)',
+                }}
+              />
+              <div className="absolute inset-x-[20%] top-[12%] h-[18%] border-t-[3px] border-l-[3px] border-r-[3px] border-[#caa472] rounded-t-full" />
+              <div className="absolute inset-x-[10%] top-[28%] bottom-[12%] bg-[#efe1c4]/90 rounded-[8%] shadow-[0_30px_80px_-20px_rgba(202,164,114,0.5)]" />
+            </div>
           </div>
         )}
 
-        {/* Type — staggered reveal driven by scroll progress */}
         <div className="relative z-10 px-6 text-center md:text-left md:ml-[55%] md:max-w-md">
           <p className="font-sans text-xs tracking-[0.3em] uppercase opacity-70 mb-6">
             The Craft
@@ -116,7 +96,6 @@ export function CraftSection({ productImage, productName }: CraftSectionProps) {
         </div>
       </div>
 
-      {/* Bottom seam — subtle warm gradient hand-off into the next section */}
       <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-b from-transparent to-[hsl(40_20%_97%)] pointer-events-none" />
     </section>
   )
