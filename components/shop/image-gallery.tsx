@@ -372,7 +372,7 @@ export function ImageGallery({ images, productName, videoUrl, videoPosition }: I
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             ref={zoomRef}
-            src={isImageActive(active) ? media[active].url : ''}
+            src={isImageActive(active) ? media[active].url : undefined}
             alt={productName}
             draggable={false}
             className="absolute top-0 left-0 w-full h-full object-cover select-none pointer-events-none"
