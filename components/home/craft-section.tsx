@@ -61,40 +61,39 @@ export function CraftSection({ productImage, productName }: CraftSectionProps) {
       style={{ minHeight: '180vh' }}
     >
       <div className="sticky top-0 h-svh flex items-center justify-center">
-        {/* 3D pearl-and-product centerpiece */}
-        <div className="absolute inset-0">
-          {supports3D ? (
+        {/* Always-on 2D product image base layer (also acts as fallback). */}
+        <div className="absolute inset-0 flex items-center justify-center md:justify-start md:pl-[8%]">
+          <div className="relative size-[55vmin] max-w-[460px] aspect-[3/4] opacity-95">
+            <div
+              aria-hidden
+              className="absolute -inset-10 rounded-full"
+              style={{
+                background:
+                  'radial-gradient(circle at 50% 50%, rgba(245,230,196,0.35) 0%, rgba(202,164,114,0.15) 45%, transparent 70%)',
+                filter: 'blur(8px)',
+              }}
+            />
+            <Image
+              src={productImage}
+              alt={productName}
+              fill
+              sizes="55vmin"
+              className="object-contain"
+              priority
+            />
+          </div>
+        </div>
+
+        {/* 3D pearl-and-product enhancement layer (transparent canvas) */}
+        {supports3D && (
+          <div className="absolute inset-0" data-testid="craft-3d-canvas">
             <CraftPearl
               progress={progress}
               productImage={productImage}
               productName={productName}
             />
-          ) : (
-            // 2D fallback: the same product photo with a warm halo.
-            <div className="absolute inset-0 flex items-center justify-center md:justify-start md:pl-[10%]">
-              <div className="relative size-[60vmin] max-w-[440px]">
-                <div
-                  aria-hidden
-                  className="absolute -inset-8 rounded-full"
-                  style={{
-                    background:
-                      'radial-gradient(circle at 50% 50%, rgba(245,230,196,0.35) 0%, rgba(202,164,114,0.15) 45%, transparent 70%)',
-                    filter: 'blur(8px)',
-                  }}
-                />
-                <div className="relative aspect-[3/4] overflow-hidden rounded-sm">
-                  <Image
-                    src={productImage}
-                    alt={productName}
-                    fill
-                    sizes="60vmin"
-                    className="object-cover"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Type — staggered reveal driven by scroll progress */}
         <div className="relative z-10 px-6 text-center md:text-left md:ml-[55%] md:max-w-md">
