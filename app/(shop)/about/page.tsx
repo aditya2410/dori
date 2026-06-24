@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import aboutImg from '@/public/images/aboutus.jpg'
+import { AboutPearls } from '@/components/three/about-pearls'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/about' },
@@ -25,6 +26,8 @@ export default function AboutPage() {
           className="object-cover object-top"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
+        {/* 3D pearl backdrop — only renders on devices that support WebGL */}
+        <AboutPearls />
         <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
           <h1 className="font-serif text-5xl md:text-7xl font-light text-white tracking-tight">
             Made in Jaipur.

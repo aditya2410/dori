@@ -23,6 +23,8 @@
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.2",
     "@radix-ui/react-toast": "^1.2.4",
+    "@react-three/drei": "^10.1.1",
+    "@react-three/fiber": "^9.6.1",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.0",
     "@tiptap/extension-placeholder": "^3.25.0",
@@ -40,12 +42,14 @@
     "react-dom": "^19.0.0",
     "resend": "^4.0.0",
     "tailwind-merge": "^2.6.0",
+    "three": "^0.174.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
+    "@types/three": "^0.174.0",
     "autoprefixer": "^10.4.20",
     "dotenv": "^16.4.7",
     "eslint": "^9.18.0",

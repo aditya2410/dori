@@ -1,0 +1,77 @@
+'use client'
+
+import dynamic from 'next/dynamic'
+import Link from 'next/link'
+import Image from 'next/image'
+import heroImg from '@/public/images/hero.webp'
+import { heroConfig } from '@/lib/config'
+import { use3DSupport } from '@/lib/use-3d-support'
+
+// R3F + three.js are heavy. Load only on the client, only when needed.
+const Hero3DScene = dynamic(
+  () => import('./hero-3d-scene').then((m) => m.Hero3DScene),
+  { ssr: false }
+)
+
+/**
+ * 3D hero with graceful 2D fallback.
+ *
+ *   • While support is being detected → render the 2D <Image/> hero.
+ *   • If the device supports WebGL & the user hasn't requested reduced
+ *     motion → upgrade to a live <Hero3DScene/> behind the same overlay.
+ *   • Otherwise → keep the 2D hero (visually identical to the original).
+ *
+ * Copy, CTA, and brand layering are preserved verbatim from the 2D hero.
+ */
+export function Hero3D() {
+  const supports3D = use3DSupport()
+
+  return (
+    <section
+      data-testid="hero-section"
+      className="relative w-full aspect-[3/4] md:h-[calc(100vh-4rem)] overflow-hidden bg-[#1a1614]"
+    >
+      {/* 2D base image: always rendered for SSR, becomes the fallback. */}
+      {!supports3D && (
+        <Image
+          src={heroImg}
+          alt={heroConfig.headline}
+          fill
+          sizes="100vw"
+          quality={90}
+          priority
+          placeholder="blur"
+          className="object-cover object-center"
+        />
+      )}
+
+      {/* 3D upgrade: only mounted when the device can handle it. */}
+      {supports3D && (
+        <div className="absolute inset-0" data-testid="hero-3d-canvas">
+          <Hero3DScene imageSrc={heroConfig.image} />
+        </div>
+      )}
+
+      {/* Gradient overlay — subtle darkening toward the bottom */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40 pointer-events-none" />
+
+      {/* Text overlay — identical copy to the original 2D hero */}
+      <div className="absolute inset-0 flex flex-col items-center justify-end pb-16 md:justify-center md:pb-0 px-6 text-center">
+        <h1 className="font-serif text-4xl md:text-6xl font-light tracking-tight text-white">
+          {heroConfig.headline}
+        </h1>
+        <p className="font-sans text-sm md:text-base tracking-wide text-white/90 mt-4 max-w-md leading-relaxed">
+          {heroConfig.subheadline}
+        </p>
+        <Link
+          href={heroConfig.ctaHref}
+          data-track="hero-cta"
+          data-testid="hero-cta"
+          className="inline-block bg-white text-foreground text-xs tracking-[0.2em] px-10 py-4 mt-8 hover:bg-white/90 transition-colors"
+        >
+          {heroConfig.ctaText}
+        </Link>
+      </div>
+    </section>
+  )
+}

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Hero } from '@/components/home/hero'
+import { Hero3D } from '@/components/three/hero-3d'
 import { BestSellers } from '@/components/home/best-sellers'
 import { CommunityBanner } from '@/components/home/community-banner'
 import { createServiceClient } from '@/lib/supabase/server'
@@ -23,7 +23,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <Hero />
+      <Hero3D />
       <BestSellers />
       <CommunityBanner photos={communityPhotos ?? []} />
     </>
