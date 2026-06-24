@@ -16,10 +16,13 @@ const Hero3DScene = dynamic(
 /**
  * 3D hero with graceful 2D fallback.
  *
- *   • While support is being detected → render the 2D <Image/> hero.
- *   • If the device supports WebGL & the user hasn't requested reduced
- *     motion → upgrade to a live <Hero3DScene/> behind the same overlay.
- *   • Otherwise → keep the 2D hero (visually identical to the original).
+ * Architecture:
+ *   • The 2D <Image/> is ALWAYS rendered as the base layer. It's the
+ *     SSR-safe, always-correct visual ground truth.
+ *   • If the device supports WebGL, a transparent <Canvas/> is layered
+ *     on top to add the ripple + parallax + dust particles.
+ *   • If anything in the 3D path fails, errors, or the device doesn't
+ *     support it, the user still sees the perfect 2D hero underneath.
  *
  * Copy, CTA, and brand layering are preserved verbatim from the 2D hero.
  */
@@ -31,21 +34,21 @@ export function Hero3D() {
       data-testid="hero-section"
       className="relative w-full aspect-[3/4] md:h-[calc(100vh-4rem)] overflow-hidden bg-[#1a1614]"
     >
-      {/* 2D base image: always rendered for SSR, becomes the fallback. */}
-      {!supports3D && (
-        <Image
-          src={heroImg}
-          alt={heroConfig.headline}
-          fill
-          sizes="100vw"
-          quality={90}
-          priority
-          placeholder="blur"
-          className="object-cover object-center"
-        />
-      )}
+      {/* Base layer: 2D hero image — always rendered for SSR & fallback. */}
+      <Image
+        src={heroImg}
+        alt={heroConfig.headline}
+        fill
+        sizes="100vw"
+        quality={90}
+        priority
+        placeholder="blur"
+        className="object-cover object-center"
+      />
 
-      {/* 3D upgrade: only mounted when the device can handle it. */}
+      {/* 3D enhancement layer: mounted only when the device can handle it.
+          The canvas is transparent so the 2D image shows through if any
+          part of the scene fails to render. */}
       {supports3D && (
         <div className="absolute inset-0" data-testid="hero-3d-canvas">
           <Hero3DScene imageSrc={heroConfig.image} />
@@ -56,11 +59,11 @@ export function Hero3D() {
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40 pointer-events-none" />
 
       {/* Text overlay — identical copy to the original 2D hero */}
-      <div className="absolute inset-0 flex flex-col items-center justify-end pb-16 md:justify-center md:pb-0 px-6 text-center">
-        <h1 className="font-serif text-4xl md:text-6xl font-light tracking-tight text-white">
+      <div className="absolute inset-0 flex flex-col items-center justify-end pb-16 md:justify-center md:pb-0 px-6 text-center z-10">
+        <h1 className="font-serif text-4xl md:text-6xl font-light tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]">
           {heroConfig.headline}
         </h1>
-        <p className="font-sans text-sm md:text-base tracking-wide text-white/90 mt-4 max-w-md leading-relaxed">
+        <p className="font-sans text-sm md:text-base tracking-wide text-white/90 mt-4 max-w-md leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
           {heroConfig.subheadline}
         </p>
         <Link
