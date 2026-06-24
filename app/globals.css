@@ -102,3 +102,32 @@
     scrollbar-color: hsl(var(--border)) transparent;
   }
 }
+
+/* ── Scroll-reveal primitive ────────────────────────────────────────
+   Drives the <Reveal> wrapper. Hidden by default, fades + transforms
+   into place when data-visible="true" is set by IntersectionObserver. */
+@layer utilities {
+  .reveal {
+    opacity: 0;
+    transition:
+      opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 900ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 900ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .reveal[data-reveal='up']    { transform: translateY(48px); }
+  .reveal[data-reveal='fade']  { filter: blur(8px); }
+  .reveal[data-reveal='scale'] { transform: scale(0.94); }
+  .reveal[data-reveal='right'] { transform: translateX(64px); }
+  .reveal[data-reveal='left']  { transform: translateX(-64px); }
+
+  .reveal[data-visible='true'] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1 !important; transform: none !important; filter: none !important; }
+  }
+}

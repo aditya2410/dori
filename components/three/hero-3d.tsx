@@ -32,7 +32,7 @@ export function Hero3D() {
   return (
     <section
       data-testid="hero-section"
-      className="relative w-full aspect-[3/4] md:h-[calc(100vh-4rem)] overflow-hidden bg-[#1a1614]"
+      className="relative w-full h-svh min-h-[640px] overflow-hidden bg-[#1a1614]"
     >
       {/* Base layer: 2D hero image — always rendered for SSR & fallback. */}
       <Image
