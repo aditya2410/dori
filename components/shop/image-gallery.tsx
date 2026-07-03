@@ -320,7 +320,10 @@ export function ImageGallery({ images, productName, videoUrl, videoPosition }: I
   }
 
   return (
-    <div className="space-y-3">
+    // On mobile, cap the gallery width in vh units so the 3:4 image stays
+    // ~55vh tall — the full image shows but the Buy Now button remains above
+    // the fold. Desktop (md+) keeps the two-column full-width layout.
+    <div className="space-y-3 max-w-[min(41vh,100%)] mx-auto md:max-w-none md:mx-0">
       <div
         ref={containerRef}
         className="aspect-[3/4] bg-secondary overflow-hidden relative"
@@ -397,9 +400,9 @@ export function ImageGallery({ images, productName, videoUrl, videoPosition }: I
         )}
       </div>
 
-      {/* Thumbnails — desktop */}
+      {/* Thumbnails — shown on all breakpoints */}
       {media.length > 1 && (
-        <div className="hidden md:grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           {media.map((item, i) => (
             <button
               key={item.url}
