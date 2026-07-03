@@ -54,6 +54,7 @@ export interface Database {
           pathname: string | null
           user_agent: string | null
           user_id: string | null
+          event_type: string
           created_at: string
         }
         Insert: {
@@ -65,6 +66,7 @@ export interface Database {
           pathname?: string | null
           user_agent?: string | null
           user_id?: string | null
+          event_type?: string
           created_at?: string
         }
         Update: {
@@ -76,6 +78,7 @@ export interface Database {
           pathname?: string | null
           user_agent?: string | null
           user_id?: string | null
+          event_type?: string
           created_at?: string
         }
         Relationships: []

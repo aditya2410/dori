@@ -44,6 +44,27 @@ export async function POST(request: NextRequest) {
       })
       if (error) console.error('visitor_log insert failed:', error.message)
     }
+    // alongside the existing page_view block in /api/track/route.ts
+    if (body.event === 'click') {
+      const ip =
+        request.headers.get('x-real-ip') ??
+        request.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
+        null
+      const country = request.headers.get('x-vercel-ip-country')
+      const city = request.headers.get('x-vercel-ip-city')
+      const userAgent = request.headers.get('user-agent') ?? ''
+
+      const admin = createServiceClient()
+      const { error } = await admin.from('visitor_logs').insert({
+        event_type: 'click',
+        pathname: body.path,
+        ip,
+        country,
+        city,
+        user_agent: userAgent,
+      })
+      if (error) console.error('visitor_log click insert failed:', error.message)
+    }
 
     return NextResponse.json({ ok: true })
   } catch {
