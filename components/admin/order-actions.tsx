@@ -42,7 +42,8 @@ export function OrderActions({ orderId, status }: { orderId: string; status: str
     )
   }
 
-  const canShip    = optimisticStatus === 'paid'
+  // COD orders ship from 'confirmed'; prepaid orders ship from 'paid'.
+  const canShip    = optimisticStatus === 'paid' || optimisticStatus === 'confirmed'
   const canDeliver = optimisticStatus === 'shipped'
 
   function handleDeliver() {
@@ -77,7 +78,7 @@ return (
       </div>
 
       {/* Inline ship form */}
-      {showShipForm && optimisticStatus === 'paid' && (
+      {showShipForm && canShip && (
         <form action={shipAction} className="space-y-3 pt-2 border-t">
           <div className="space-y-1.5">
             <Label htmlFor="tracking">Tracking number</Label>

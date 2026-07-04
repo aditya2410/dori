@@ -5,6 +5,9 @@ import { getRazorpay } from '@/lib/razorpay'
 import { generateOrderNumber } from '@/lib/utils'
 import { computeSaleDiscount } from '@/lib/sales'
 import { getOrCreateUserByEmail } from '@/lib/auth'
+import { sendCodOrderConfirmationEmail } from '@/lib/email'
+import { COD_MAX_PAISE, codFeeFor } from '@/lib/cod'
+import { checkCodServiceability } from '@/lib/shiprocket'
 import type { ShippingAddress, Json } from '@/types/database.types'
 
 const guestSchema = z.object({
@@ -40,6 +43,7 @@ const bodySchema = z.object({
     )
     .min(1, 'Cart is empty'),
   saleCode: z.string().trim().min(1).optional(),
+  paymentMethod: z.enum(['razorpay', 'cod']).default('razorpay'),
 })
 
 // Fixed shipping — configure via SHIPPING_PAISE env var (default ₹150)
@@ -59,7 +63,8 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 })
   }
-  const { addressId, guest, billing, items, saleCode } = parsed.data
+  const { addressId, guest, billing, items, saleCode, paymentMethod } = parsed.data
+  const isCod = paymentMethod === 'cod'
   const billingAddress = billing
     ? ({ ...billing, line2: billing.line2 ?? undefined, country: 'IN' } as unknown as Json)
     : null
@@ -191,7 +196,29 @@ export async function POST(request: NextRequest) {
   }
 
   const shippingPaise = freeShipping ? 0 : calcShipping(subtotalPaise)
-  const totalPaise = subtotalPaise - discountPaise + shippingPaise
+  // Order value used to gate COD — before any COD handling fee is added.
+  const preFeeTotalPaise = subtotalPaise - discountPaise + shippingPaise
+
+  // ── COD gating (server is authoritative) ─────────────────────
+  if (isCod) {
+    if (preFeeTotalPaise > COD_MAX_PAISE) {
+      return NextResponse.json(
+        { error: 'Cash on Delivery is not available for this order value. Please pay online.' },
+        { status: 400 },
+      )
+    }
+    // Real Shiprocket serviceability check (fails open if not configured — see lib/shiprocket.ts).
+    const serviceable = await checkCodServiceability(shippingAddress.pincode)
+    if (!serviceable) {
+      return NextResponse.json(
+        { error: 'Cash on Delivery is not available for this pincode. Please pay online.' },
+        { status: 400 },
+      )
+    }
+  }
+
+  const codFeePaise = codFeeFor(paymentMethod)
+  const totalPaise = preFeeTotalPaise + codFeePaise
 
   // ── Create order ─────────────────────────────────────────────
   const orderNumber = generateOrderNumber()
@@ -200,10 +227,14 @@ export async function POST(request: NextRequest) {
     .insert({
       user_id: userId,
       order_number: orderNumber,
-      status: 'created',
+      // COD orders are placed and ready to ship immediately (cash collected on
+      // delivery); prepaid orders stay 'created' until Razorpay confirms payment.
+      status: isCod ? 'confirmed' : 'created',
+      payment_method: paymentMethod,
       subtotal_paise: subtotalPaise,
       shipping_paise: shippingPaise,
       discount_paise: discountPaise,
+      cod_fee_paise: codFeePaise,
       sale_id: saleId,
       total_paise: totalPaise,
       shipping_address: shippingAddress as unknown as Json,
@@ -254,6 +285,41 @@ export async function POST(request: NextRequest) {
         { status: 409 },
       )
     }
+  }
+
+  // ── COD: no Razorpay — the order is confirmed here ───────────
+  if (isCod) {
+    // Distinct COD confirmation: states the amount payable on delivery and
+    // asks the customer to keep exact change ready. Email failure must not
+    // block the order, mirroring the prepaid verify/webhook flow.
+    try {
+      const to = shippingAddress.contact_email ?? user?.email
+      if (!to) throw new Error('No recipient email for COD order ' + order.id)
+      await sendCodOrderConfirmationEmail({
+        to,
+        orderNumber,
+        items: items.map((i) => ({
+          name: productMap.get(i.productId)!.name,
+          quantity: i.quantity,
+          unitPricePaise: productMap.get(i.productId)!.price_paise,
+        })),
+        subtotalPaise,
+        shippingPaise,
+        discountPaise,
+        codFeePaise,
+        totalPaise,
+        shippingAddress,
+      })
+    } catch (err) {
+      console.error('[orders/create] COD email:', err)
+    }
+
+    return NextResponse.json({
+      orderId: order.id,
+      orderNumber,
+      paymentMethod: 'cod',
+      amountPaise: totalPaise,
+    })
   }
 
   // ── Create Razorpay order ────────────────────────────────────

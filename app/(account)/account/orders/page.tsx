@@ -9,8 +9,9 @@ import type { OrderStatus } from '@/types/database.types'
 
 export const metadata: Metadata = { title: 'Orders' }
 
-const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'success' | 'destructive' | 'outline'> = {
+const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'success' | 'destructive' | 'outline' | 'warning'> = {
   created:   'outline',
+  confirmed: 'warning',
   paid:      'secondary',
   shipped:   'default',
   delivered: 'success',

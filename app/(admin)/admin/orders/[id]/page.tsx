@@ -12,8 +12,9 @@ import type { OrderStatus, ShippingAddress } from '@/types/database.types'
 
 export const metadata: Metadata = { title: 'Order Detail — Admin' }
 
-const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'success' | 'destructive' | 'outline'> = {
+const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'success' | 'destructive' | 'outline' | 'warning'> = {
   created:   'outline',
+  confirmed: 'warning',
   paid:      'secondary',
   shipped:   'default',
   delivered: 'success',
@@ -66,6 +67,7 @@ export default async function AdminOrderDetailPage({
           <Badge variant={statusVariant[order.status as OrderStatus]}>
             {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
           </Badge>
+          {order.payment_method === 'cod' && <Badge variant="warning">Cash on Delivery</Badge>}
         </div>
         <p className="text-sm text-muted-foreground">
           {new Date(order.created_at).toLocaleDateString('en-IN', {
@@ -141,6 +143,12 @@ export default async function AdminOrderDetailPage({
           <span className="text-muted-foreground">Shipping</span>
           <span>{order.shipping_paise === 0 ? 'Free' : formatPrice(order.shipping_paise)}</span>
         </div>
+        {order.cod_fee_paise > 0 && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">COD handling fee</span>
+            <span>{formatPrice(order.cod_fee_paise)}</span>
+          </div>
+        )}
         <Separator />
         <div className="flex justify-between font-medium">
           <span>Total</span>
@@ -161,30 +169,41 @@ export default async function AdminOrderDetailPage({
       </div>
 
       {/* Payment info */}
-      {order.razorpay_payment_id && (
-        <>
-          <Separator />
-          <div className="space-y-2 text-sm">
-            <h2 className="font-serif text-xl font-normal mb-3">Payment</h2>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Payment ID</span>
-              <span className="font-mono text-xs">{order.razorpay_payment_id}</span>
-            </div>
+      <Separator />
+      <div className="space-y-2 text-sm">
+        <h2 className="font-serif text-xl font-normal mb-3">Payment</h2>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Method</span>
+          <span>{order.payment_method === 'cod' ? 'Cash on Delivery' : 'Prepaid (Razorpay)'}</span>
+        </div>
+        {order.payment_method === 'cod' ? (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">To collect on delivery</span>
+            <span className="font-medium">{formatPrice(order.total_paise)}</span>
+          </div>
+        ) : (
+          <>
+            {order.razorpay_payment_id && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Payment ID</span>
+                <span className="font-mono text-xs">{order.razorpay_payment_id}</span>
+              </div>
+            )}
             {order.razorpay_order_id && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Order ID</span>
                 <span className="font-mono text-xs">{order.razorpay_order_id}</span>
               </div>
             )}
-            {order.tracking_number && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Tracking</span>
-                <span>{order.tracking_number}</span>
-              </div>
-            )}
+          </>
+        )}
+        {order.tracking_number && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Tracking</span>
+            <span>{order.tracking_number}</span>
           </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   )
 }

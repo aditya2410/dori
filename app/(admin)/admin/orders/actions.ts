@@ -28,7 +28,8 @@ export async function markShippedAction(
     .from('orders')
     .update({ status: 'shipped', tracking_number: tracking })
     .eq('id', orderId)
-    .eq('status', 'paid')
+    // Prepaid orders ship from 'paid'; COD orders ship from 'confirmed'.
+    .in('status', ['paid', 'confirmed'])
     .select('order_number, user_id, shipping_address')
     .single()
 
@@ -88,7 +89,7 @@ export async function cancelOrder(orderId: string): Promise<void> {
     .from('orders')
     .update({ status: 'cancelled' })
     .eq('id', orderId)
-    .in('status', ['created', 'paid'])
+    .in('status', ['created', 'confirmed', 'paid'])
 
   if (!error) {
     for (const item of items ?? []) {

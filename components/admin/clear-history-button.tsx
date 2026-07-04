@@ -7,16 +7,16 @@ import { Button } from '@/components/ui/button'
 
 interface ClearHistoryButtonProps {
   count: number
-  paidCount: number
+  unshippedCount: number
   shippedCount: number
 }
 
-export function ClearHistoryButton({ count, paidCount, shippedCount }: ClearHistoryButtonProps) {
+export function ClearHistoryButton({ count, unshippedCount, shippedCount }: ClearHistoryButtonProps) {
   const [isPending, startTransition] = useTransition()
 
   function handleClick() {
     const warnings: string[] = []
-    if (paidCount > 0) warnings.push(`${paidCount} paid order${paidCount === 1 ? '' : 's'} still need${paidCount === 1 ? 's' : ''} to be shipped`)
+    if (unshippedCount > 0) warnings.push(`${unshippedCount} order${unshippedCount === 1 ? '' : 's'} still need${unshippedCount === 1 ? 's' : ''} to be shipped`)
     if (shippedCount > 0) warnings.push(`${shippedCount} shipped order${shippedCount === 1 ? '' : 's'} still need${shippedCount === 1 ? 's' : ''} to be marked delivered`)
 
     let message = `Mark ${count} completed order${count === 1 ? '' : 's'} as cleared? They will be hidden from this view.`

@@ -30,7 +30,10 @@ export default async function OrderConfirmationPage({
     .eq('id', id)
     .single()
 
-  if (!order || order.status !== 'paid') notFound()
+  // A placed order shows here whether prepaid ('paid') or COD ('confirmed').
+  if (!order || (order.status !== 'paid' && order.status !== 'confirmed')) notFound()
+
+  const isCod = order.payment_method === 'cod'
 
   const { data: orderItems } = await service
     .from('order_items')
@@ -85,11 +88,27 @@ export default async function OrderConfirmationPage({
             <span className="text-muted-foreground">Shipping</span>
             <span>{order.shipping_paise === 0 ? 'Free' : formatPrice(order.shipping_paise)}</span>
           </div>
+          {order.cod_fee_paise > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">COD handling fee</span>
+              <span>{formatPrice(order.cod_fee_paise)}</span>
+            </div>
+          )}
           <div className="flex justify-between font-medium">
             <span>Total</span>
             <span>{formatPrice(order.total_paise)}</span>
           </div>
         </div>
+
+        {isCod && (
+          <div className="border border-border bg-secondary/40 p-4 text-sm space-y-1">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">Cash on Delivery</p>
+            <p className="font-medium">Pay {formatPrice(order.total_paise)} on delivery</p>
+            <p className="text-muted-foreground leading-relaxed">
+              Please keep exact change ready for our delivery partner.
+            </p>
+          </div>
+        )}
 
         <Separator />
 

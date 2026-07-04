@@ -32,7 +32,9 @@ export function QuickOrderAction({ orderId, status }: { orderId: string; status:
     null,
   )
 
-  if (status === 'paid') {
+  // COD orders sit in 'confirmed' (unpaid, ready to ship) and share the same
+  // ship → deliver pipeline as prepaid 'paid' orders.
+  if (status === 'paid' || status === 'confirmed') {
     if (shipped) {
       return (
         <span className="flex items-center gap-1 text-xs text-green-700">

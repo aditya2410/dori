@@ -13,6 +13,7 @@ export const metadata: Metadata = { title: 'Orders — Admin' }
 const FILTERS = [
   { label: 'All',              value: '' },
   { label: 'Awaiting Payment', value: 'created' },
+  { label: 'COD — Confirmed',  value: 'confirmed' },
   { label: 'Paid',             value: 'paid' },
   { label: 'Shipped',          value: 'shipped' },
   { label: 'Delivered',        value: 'delivered' },
@@ -20,8 +21,9 @@ const FILTERS = [
   { label: 'Refunded',         value: 'refunded' },
 ]
 
-const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'success' | 'destructive' | 'outline'> = {
+const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'success' | 'destructive' | 'outline' | 'warning'> = {
   created:   'outline',
+  confirmed: 'warning',
   paid:      'secondary',
   shipped:   'default',
   delivered: 'success',
@@ -31,6 +33,8 @@ const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'success' | '
 
 const statusLabel: Record<OrderStatus, string> = {
   created:   'Awaiting Payment',
+  // COD: order placed & ready to ship, cash NOT yet collected (not a failed payment).
+  confirmed: 'COD — Unpaid, Ready to Ship',
   paid:      'Paid — Ready to Ship',
   shipped:   'Shipped',
   delivered: 'Delivered',
@@ -51,7 +55,7 @@ export default async function AdminOrdersPage({
 
   let query = supabase
     .from('orders')
-    .select('id, order_number, status, total_paise, created_at, shipping_address')
+    .select('id, order_number, status, payment_method, total_paise, created_at, shipping_address')
     .eq('settled', showHistory)
     .order('created_at', { ascending: false })
 
@@ -61,16 +65,17 @@ export default async function AdminOrdersPage({
 
   // Count clearable and still-active orders — only needed on the active view
   let clearableCount = 0
-  let paidCount = 0
+  let unshippedCount = 0
   let shippedCount = 0
   if (!showHistory) {
-    const [{ count: clearable }, { count: paid }, { count: shipped }] = await Promise.all([
+    // Both prepaid ('paid') and COD ('confirmed') orders are ready-but-unshipped.
+    const [{ count: clearable }, { count: unshipped }, { count: shipped }] = await Promise.all([
       supabase.from('orders').select('id', { count: 'exact', head: true }).eq('settled', false).in('status', CLEARABLE_STATUSES),
-      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('settled', false).eq('status', 'paid'),
+      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('settled', false).in('status', ['paid', 'confirmed']),
       supabase.from('orders').select('id', { count: 'exact', head: true }).eq('settled', false).eq('status', 'shipped'),
     ])
     clearableCount = clearable ?? 0
-    paidCount = paid ?? 0
+    unshippedCount = unshipped ?? 0
     shippedCount = shipped ?? 0
   }
 
@@ -96,7 +101,7 @@ export default async function AdminOrdersPage({
 
         <div className="flex items-center gap-2 shrink-0 pt-1">
           {!showHistory && clearableCount > 0 && (
-            <ClearHistoryButton count={clearableCount} paidCount={paidCount} shippedCount={shippedCount} />
+            <ClearHistoryButton count={clearableCount} unshippedCount={unshippedCount} shippedCount={shippedCount} />
           )}
           {!showHistory && (
             <Link
@@ -160,12 +165,19 @@ export default async function AdminOrdersPage({
                     className={`hover:bg-secondary/30 transition-colors ${i < orders.length - 1 ? 'border-b' : ''}`}
                   >
                     <td className="p-4">
-                      <Link
-                        href={`/admin/orders/${order.id}`}
-                        className="font-medium hover:underline underline-offset-4"
-                      >
-                        {order.order_number}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          className="font-medium hover:underline underline-offset-4"
+                        >
+                          {order.order_number}
+                        </Link>
+                        {order.payment_method === 'cod' && (
+                          <span className="inline-flex items-center border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-800">
+                            COD
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4 text-muted-foreground hidden md:table-cell">
                       {addr?.full_name ?? '—'}

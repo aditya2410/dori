@@ -25,8 +25,9 @@ const TIMELINE: TimelineStep[] = [
 
 const TERMINAL_BAD: OrderStatus[] = ['cancelled', 'refunded']
 
-const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'success' | 'destructive' | 'outline'> = {
+const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'success' | 'destructive' | 'outline' | 'warning'> = {
   created:   'outline',
+  confirmed: 'warning',
   paid:      'secondary',
   shipped:   'default',
   delivered: 'success',
@@ -36,7 +37,8 @@ const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'success' | '
 
 function statusRank(s: OrderStatus): number {
   const order: OrderStatus[] = ['created', 'paid', 'shipped', 'delivered']
-  return order.indexOf(s)
+  // COD orders sit at 'confirmed' rather than 'paid' but are the same stage.
+  return order.indexOf(s === 'confirmed' ? 'paid' : s)
 }
 
 export default async function OrderDetailPage({
@@ -173,6 +175,12 @@ export default async function OrderDetailPage({
           <span className="text-muted-foreground">Shipping</span>
           <span>{order.shipping_paise === 0 ? 'Free' : formatPrice(order.shipping_paise)}</span>
         </div>
+        {order.cod_fee_paise > 0 && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">COD handling fee</span>
+            <span>{formatPrice(order.cod_fee_paise)}</span>
+          </div>
+        )}
         <Separator />
         <div className="flex justify-between font-medium">
           <span>Total</span>

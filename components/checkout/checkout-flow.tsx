@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { AddressForm } from '@/components/account/address-form'
 import { formatPrice } from '@/lib/utils'
+import { COD_FEE_PAISE, isCodEligible } from '@/lib/cod'
 
 type Address = {
   id: string
@@ -51,6 +52,7 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
   const [showAddForm, setShowAddForm] = useState(addresses.length === 0)
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>('razorpay')
 
   // Guest details (no account required)
   const [guest, setGuest] = useState({
@@ -82,7 +84,17 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
   const [applying, setApplying] = useState(false)
 
   const shippingPaise = freeShipping ? 0 : calcShipping(subtotalPaise)
-  const totalPaise = subtotalPaise - discountPaise + shippingPaise
+  // Order value the COD cap is checked against — before any COD handling fee.
+  const preFeeTotalPaise = subtotalPaise - discountPaise + shippingPaise
+  const codAvailable = isCodEligible(preFeeTotalPaise)
+  const codFeePaise = paymentMethod === 'cod' ? COD_FEE_PAISE : 0
+  const totalPaise = preFeeTotalPaise + codFeePaise
+
+  // If a discount is removed (or the cart changes) so the order crosses the cap,
+  // fall back to Pay Online — mirrors the server refusing COD above the cap.
+  useEffect(() => {
+    if (!codAvailable && paymentMethod === 'cod') setPaymentMethod('razorpay')
+  }, [codAvailable, paymentMethod])
 
   const addressValid = isGuest ? guestValid : !!selectedId
   const canPay = addressValid && billingValid
@@ -156,25 +168,28 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
 
   async function handlePay() {
     if (!canPay) return
+    const isCod = paymentMethod === 'cod'
     setProcessing(true)
     setError(null)
 
-    // 0. Ensure Razorpay script is loaded
-    try {
-      await loadRazorpayScript()
-    } catch {
-      setError('Could not load payment SDK. Check your connection and try again.')
-      setProcessing(false)
-      return
+    // 0. Ensure Razorpay script is loaded (prepaid only)
+    if (!isCod) {
+      try {
+        await loadRazorpayScript()
+      } catch {
+        setError('Could not load payment SDK. Check your connection and try again.')
+        setProcessing(false)
+        return
+      }
     }
 
     // 1. Create order
     let orderData: {
       orderId: string
       orderNumber: string
-      razorpayOrderId: string
+      razorpayOrderId?: string
       amountPaise: number
-      keyId: string
+      keyId?: string
     }
 
     try {
@@ -183,6 +198,7 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+          paymentMethod,
           ...(isGuest
             ? { guest: { ...guest, line2: guest.line2 || undefined } }
             : { addressId: selectedId }),
@@ -203,14 +219,21 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
       return
     }
 
-    // 2. Open Razorpay modal
+    // 2a. COD — order is already confirmed server-side; go to confirmation.
+    if (isCod) {
+      clearCart()
+      router.push(`/order-confirmation/${orderData.orderId}`)
+      return
+    }
+
+    // 2b. Open Razorpay modal (prepaid)
     const rzp = new window.Razorpay({
-      key: orderData.keyId,
+      key: orderData.keyId!,
       amount: orderData.amountPaise,
       currency: 'INR',
       name: 'DORI',
       description: `Order ${orderData.orderNumber}`,
-      order_id: orderData.razorpayOrderId,
+      order_id: orderData.razorpayOrderId!,
       prefill: isGuest
         ? { name: guest.full_name, email: guest.email, contact: guest.phone }
         : { name: userName, email: userEmail, contact: userPhone },
@@ -514,12 +537,57 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
             <span className="text-muted-foreground">Shipping</span>
             <span>{shippingPaise === 0 ? 'Free' : formatPrice(shippingPaise)}</span>
           </div>
+          {codFeePaise > 0 && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">COD handling fee</span>
+              <span>{formatPrice(codFeePaise)}</span>
+            </div>
+          )}
           <Separator />
           <div className="flex justify-between font-medium text-base">
             <span>Total</span>
             <span>{formatPrice(totalPaise)}</span>
           </div>
         </div>
+
+        <Separator />
+
+        {/* ── Payment method ────────────────────────────────────── */}
+        <section className="space-y-3">
+          <h2 className="text-xs uppercase tracking-wider text-muted-foreground">Payment method</h2>
+          {([
+            { value: 'razorpay', title: 'Pay Online', desc: 'Cards, UPI, net banking & wallets · secured by Razorpay' },
+            // COD is hidden above the order-value cap — Pay Online only.
+            ...(codAvailable
+              ? [{ value: 'cod', title: 'Cash on Delivery', desc: 'Pay in cash when your order is delivered' } as const]
+              : []),
+          ] as const).map((opt) => (
+            <label
+              key={opt.value}
+              className={`flex items-start gap-4 border p-4 cursor-pointer transition-colors ${
+                paymentMethod === opt.value ? 'border-foreground' : 'hover:border-foreground/40'
+              }`}
+            >
+              <input
+                type="radio"
+                name="payment-method"
+                value={opt.value}
+                checked={paymentMethod === opt.value}
+                onChange={() => setPaymentMethod(opt.value)}
+                className="mt-0.5 accent-foreground"
+              />
+              <div className="text-sm leading-relaxed">
+                <p className="font-medium">{opt.title}</p>
+                <p className="text-muted-foreground">{opt.desc}</p>
+              </div>
+            </label>
+          ))}
+          {!codAvailable && (
+            <p className="text-xs text-muted-foreground">
+              Cash on Delivery isn’t available for orders of this value — please pay online.
+            </p>
+          )}
+        </section>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
@@ -530,11 +598,17 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
           onClick={handlePay}
           disabled={!canPay || processing}
         >
-          {processing ? 'Processing…' : `Pay ${formatPrice(totalPaise)}`}
+          {processing
+            ? 'Processing…'
+            : paymentMethod === 'cod'
+              ? `Place Order · Pay ${formatPrice(totalPaise)} on delivery`
+              : `Pay ${formatPrice(totalPaise)}`}
         </Button>
 
         <p className="text-xs text-center text-muted-foreground">
-          Secured by Razorpay · Your card is never stored
+          {paymentMethod === 'cod'
+            ? 'Please keep exact change ready for delivery'
+            : 'Secured by Razorpay · Your card is never stored'}
         </p>
       </div>
     </div>

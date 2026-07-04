@@ -113,6 +113,7 @@ interface OrderConfirmationData {
   subtotalPaise: number
   shippingPaise: number
   discountPaise?: number
+  codFeePaise?: number
   totalPaise: number
   shippingAddress: ShippingAddress
 }
@@ -155,6 +156,68 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationData) {
     from: FROM,
     to: data.to,
     subject: `Order confirmed — ${data.orderNumber}`,
+    html,
+    text,
+  })
+}
+
+// ── COD order confirmation ────────────────────────────────────────────────────
+// Distinct from the prepaid confirmation: no payment has been taken. States the
+// exact amount payable on delivery and asks the customer to keep exact change ready.
+
+export async function sendCodOrderConfirmationEmail(data: OrderConfirmationData) {
+  const addr = data.shippingAddress
+  const firstName = addr.full_name.split(' ')[0]
+  const payable = formatPrice(data.totalPaise)
+
+  const html = layout(`
+    ${heading('Order confirmed')}
+    ${bodyText(`Hi ${firstName}, thank you for your order. We'll get started on it right away — you'll pay on delivery.`)}
+    <p style="margin:0 0 24px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#999;">${data.orderNumber}</p>
+
+    ${divider()}
+
+    ${itemsTable(data.items)}
+
+    ${divider()}
+
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${totalRow('Subtotal', formatPrice(data.subtotalPaise))}
+      ${data.discountPaise ? totalRow('Discount', `−${formatPrice(data.discountPaise)}`) : ''}
+      ${totalRow('Shipping', data.shippingPaise === 0 ? 'Free' : formatPrice(data.shippingPaise))}
+      ${data.codFeePaise ? totalRow('COD handling fee', formatPrice(data.codFeePaise)) : ''}
+      ${totalRow('Total', payable, true)}
+    </table>
+
+    ${divider()}
+
+    <!-- Cash on Delivery callout -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f0eb;border:1px solid #e8e0d8;margin:0 0 8px;">
+      <tr>
+        <td style="padding:20px 24px;">
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#999;">Cash on Delivery</p>
+          <p style="margin:0 0 4px;font-size:20px;font-weight:600;color:#1a1a1a;">Pay ${payable} on delivery</p>
+          <p style="margin:0;font-size:13px;line-height:1.7;color:#555;">Please keep <strong>exact change (${payable})</strong> ready for our delivery partner. Payment is collected in cash when your order arrives.</p>
+        </td>
+      </tr>
+    </table>
+
+    ${divider()}
+
+    <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#999;">Delivering to</p>
+    ${addressBlock(addr)}
+
+    ${divider()}
+
+    ${bodyText('Handcrafted orders ship within 3–5 business days. We\'ll send you a tracking number once your order is on its way.')}
+  `)
+
+  const text = `Order confirmed — ${data.orderNumber}\n\nHi ${firstName},\n\nThank you for your order. You'll pay on delivery.\n\n${data.items.map((i) => `${i.name} × ${i.quantity}  ${formatPrice(i.unitPricePaise * i.quantity)}`).join('\n')}\n\nCASH ON DELIVERY\nPay ${payable} on delivery. Please keep exact change (${payable}) ready for our delivery partner.\n\nDelivering to: ${addr.line1}, ${addr.city} ${addr.pincode}\n\n— DORI`
+
+  await resend.emails.send({
+    from: FROM,
+    to: data.to,
+    subject: `Order confirmed (Pay on delivery) — ${data.orderNumber}`,
     html,
     text,
   })

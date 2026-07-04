@@ -11,11 +11,14 @@ export type Json =
 
 export type OrderStatus =
   | 'created'
+  | 'confirmed'
   | 'paid'
   | 'shipped'
   | 'delivered'
   | 'cancelled'
   | 'refunded'
+
+export type PaymentMethod = 'razorpay' | 'cod'
 
 export type UserRole = 'customer' | 'admin'
 
@@ -383,10 +386,12 @@ export interface Database {
           user_id: string
           order_number: string
           status: OrderStatus
+          payment_method: PaymentMethod
           settled: boolean
           subtotal_paise: number
           shipping_paise: number
           discount_paise: number
+          cod_fee_paise: number
           sale_id: string | null
           total_paise: number
           shipping_address: Json
@@ -403,10 +408,12 @@ export interface Database {
           user_id: string
           order_number: string
           status?: OrderStatus
+          payment_method?: PaymentMethod
           settled?: boolean
           subtotal_paise: number
           shipping_paise?: number
           discount_paise?: number
+          cod_fee_paise?: number
           sale_id?: string | null
           total_paise: number
           shipping_address: Json
@@ -423,10 +430,12 @@ export interface Database {
           user_id?: string
           order_number?: string
           status?: OrderStatus
+          payment_method?: PaymentMethod
           settled?: boolean
           subtotal_paise?: number
           shipping_paise?: number
           discount_paise?: number
+          cod_fee_paise?: number
           sale_id?: string | null
           total_paise?: number
           shipping_address?: Json
