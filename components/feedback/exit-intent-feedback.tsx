@@ -10,7 +10,8 @@ import { submitLead, submitFeedback } from './actions'
 const SEEN_KEY = 'dori_feedback_seen'
 const LANDED_KEY = 'dori_landed_from'
 const ORDER_PLACED_KEY = 'dori_order_placed'
-const IDLE_MS = 25_000
+const IDLE_MS_PRODUCT = 10_000 // shorter idle on product pages
+const IDLE_MS_DEFAULT = 25_000 // every other page
 
 const REASONS = [
   'Will come back later',
@@ -65,6 +66,8 @@ export function ExitIntentFeedback() {
 
   // Never interrupt an in-progress checkout.
   const disabled = pathname.startsWith('/checkout')
+  // Shorter idle window on product pages; unchanged elsewhere.
+  const idleMs = pathname.startsWith('/products/') ? IDLE_MS_PRODUCT : IDLE_MS_DEFAULT
 
   const trigger = useCallback(() => {
     if (armedRef.current) return
@@ -79,6 +82,9 @@ export function ExitIntentFeedback() {
     setOpen(true)
   }, [])
 
+  // Exit-intent triggers: desktop mouse-out-to-top + mobile Back press. Set up
+  // once (re-runs only when crossing the checkout boundary), so the Back trap
+  // isn't re-armed on every navigation.
   useEffect(() => {
     if (disabled) return
     landedRef.current = detectLandedFrom()
@@ -86,11 +92,6 @@ export function ExitIntentFeedback() {
       if (sessionStorage.getItem(SEEN_KEY) || localStorage.getItem(ORDER_PLACED_KEY)) return
     } catch {}
 
-    let idleTimer: ReturnType<typeof setTimeout>
-    const resetIdle = () => {
-      clearTimeout(idleTimer)
-      idleTimer = setTimeout(trigger, IDLE_MS)
-    }
     // Desktop: pointer exits through the top of the viewport (toward tabs/close).
     const onMouseOut = (e: MouseEvent) => {
       if (e.clientY <= 0 && !e.relatedTarget) trigger()
@@ -98,22 +99,41 @@ export function ExitIntentFeedback() {
     // Mobile: first Back press. Push a duplicate entry so Back fires popstate.
     const onPopState = () => trigger()
 
-    const activity = ['mousemove', 'scroll', 'keydown', 'touchstart', 'click'] as const
-    activity.forEach((ev) => window.addEventListener(ev, resetIdle, { passive: true }))
     document.addEventListener('mouseout', onMouseOut)
     try {
       history.pushState({ dori: 1 }, '', location.href)
     } catch {}
     window.addEventListener('popstate', onPopState)
-    resetIdle()
 
     return () => {
-      clearTimeout(idleTimer)
-      activity.forEach((ev) => window.removeEventListener(ev, resetIdle))
       document.removeEventListener('mouseout', onMouseOut)
       window.removeEventListener('popstate', onPopState)
     }
   }, [disabled, trigger])
+
+  // Idle trigger — fires after `idleMs` of no interaction. The timer resets on
+  // any click/scroll/key/touch, and on navigation: this effect re-runs whenever
+  // the pathname changes, restarting the timer with the current page's duration.
+  useEffect(() => {
+    if (disabled) return
+    try {
+      if (sessionStorage.getItem(SEEN_KEY) || localStorage.getItem(ORDER_PLACED_KEY)) return
+    } catch {}
+
+    let idleTimer: ReturnType<typeof setTimeout>
+    const resetIdle = () => {
+      clearTimeout(idleTimer)
+      idleTimer = setTimeout(trigger, idleMs)
+    }
+    const activity = ['mousemove', 'scroll', 'keydown', 'touchstart', 'click'] as const
+    activity.forEach((ev) => window.addEventListener(ev, resetIdle, { passive: true }))
+    resetIdle() // start on mount, and reset on every navigation (pathname dep)
+
+    return () => {
+      clearTimeout(idleTimer)
+      activity.forEach((ev) => window.removeEventListener(ev, resetIdle))
+    }
+  }, [disabled, idleMs, pathname, trigger])
 
   if (!open) return null
 
