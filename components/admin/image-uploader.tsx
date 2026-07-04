@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { X, Upload, GripVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { compressImage } from '@/lib/compress-image'
 
 interface ImageUploaderProps {
   existingImages: string[]
@@ -32,7 +33,9 @@ export function ImageUploader({ existingImages, onChange }: ImageUploaderProps) 
     const newUrls: string[] = []
 
     for (let i = 0; i < files.length; i++) {
-      const file = files[i]
+      // Downscale + re-encode to WebP in the browser before uploading, so huge
+      // phone photos don't later time out Next's image optimizer.
+      const file = await compressImage(files[i])
       const ext = file.name.split('.').pop() ?? 'jpg'
 
       // Step 1: get a signed upload URL from our server (tiny request, no file bytes)

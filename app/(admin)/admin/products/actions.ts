@@ -17,6 +17,12 @@ const productSchema = z.object({
   price: z.coerce
     .number({ invalid_type_error: 'Enter a valid price.' })
     .positive('Price must be greater than ₹0.'),
+  discount_percent: z.coerce
+    .number({ invalid_type_error: 'Enter a valid discount percentage.' })
+    .int()
+    .min(0)
+    .max(99)
+    .optional(),
   stock: z.coerce
     .number({ invalid_type_error: 'Enter a valid stock quantity.' })
     .int()
@@ -64,6 +70,7 @@ export async function createProduct(
     slug: formData.get('slug'),
     description: formData.get('description') || undefined,
     price: formData.get('price'),
+    discount_percent: formData.get('discount_percent') || undefined,
     stock: formData.get('stock'),
     images: formData.get('images') ?? '[]',
     bestseller_order: formData.get('bestseller_order') || '',
@@ -82,6 +89,10 @@ export async function createProduct(
       slug: parsed.data.slug,
       description: parsed.data.description ?? null,
       price_paise: Math.round(parsed.data.price * 100),
+      discount_percent:
+        parsed.data.discount_percent && parsed.data.discount_percent > 0
+          ? parsed.data.discount_percent
+          : null,
       stock: parsed.data.stock,
       is_active: formData.get('is_active') === 'on',
       images: parseImages(parsed.data.images),
@@ -119,6 +130,7 @@ export async function updateProduct(
     slug: formData.get('slug'),
     description: formData.get('description') || undefined,
     price: formData.get('price'),
+    discount_percent: formData.get('discount_percent') || undefined,
     stock: formData.get('stock'),
     images: formData.get('images') ?? '[]',
     bestseller_order: formData.get('bestseller_order') || '',
@@ -137,6 +149,10 @@ export async function updateProduct(
       slug: parsed.data.slug,
       description: parsed.data.description ?? null,
       price_paise: Math.round(parsed.data.price * 100),
+      discount_percent:
+        parsed.data.discount_percent && parsed.data.discount_percent > 0
+          ? parsed.data.discount_percent
+          : null,
       stock: parsed.data.stock,
       is_active: formData.get('is_active') === 'on',
       images: parseImages(parsed.data.images),

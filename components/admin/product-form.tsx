@@ -21,6 +21,7 @@ interface Product {
   slug: string
   description: string | null
   price_paise: number
+  discount_percent: number | null
   stock: number
   is_active: boolean
   is_bestseller: boolean
@@ -135,7 +136,7 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-3 gap-6">
         <div className="space-y-1.5">
           <Label htmlFor="price">Price (₹)</Label>
           <Input
@@ -148,6 +149,21 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
             placeholder="2499"
             required
           />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="discount_percent">Discount %</Label>
+          <Input
+            id="discount_percent"
+            name="discount_percent"
+            type="number"
+            step="1"
+            min="0"
+            max="99"
+            defaultValue={product?.discount_percent ?? ''}
+            placeholder="e.g. 26"
+          />
+          <p className="text-xs text-muted-foreground">Shows a strikethrough original &amp; “% OFF” badge</p>
         </div>
 
         <div className="space-y-1.5">

@@ -8,6 +8,7 @@ import { getOrCreateUserByEmail } from '@/lib/auth'
 import { sendCodOrderConfirmationEmail } from '@/lib/email'
 import { COD_MAX_PAISE, codFeeFor } from '@/lib/cod'
 import { checkCodServiceability } from '@/lib/shiprocket'
+import { qualifiesForFreeShipping } from '@/lib/shipping'
 import type { ShippingAddress, Json } from '@/types/database.types'
 
 const guestSchema = z.object({
@@ -46,8 +47,11 @@ const bodySchema = z.object({
   paymentMethod: z.enum(['razorpay', 'cod']).default('razorpay'),
 })
 
-// Fixed shipping — configure via SHIPPING_PAISE env var (default ₹150)
-function calcShipping(_subtotalPaise: number): number {
+// Flat shipping (configure via SHIPPING_PAISE env, default ₹150), waived once the
+// order subtotal reaches the free-shipping threshold. Kept in sync with the cart
+// and checkout summary via lib/shipping.
+function calcShipping(subtotalPaise: number): number {
+  if (qualifiesForFreeShipping(subtotalPaise)) return 0
   return parseInt(process.env.SHIPPING_PAISE ?? '15000', 10)
 }
 

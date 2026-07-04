@@ -32,6 +32,7 @@ function reducer(items: CartItem[], action: CartAction): CartItem[] {
     }
     case 'ADD': {
       const idx = items.findIndex((i) => i.productId === action.item.productId)
+      // Already in the bag — add another unit (each click adds one).
       if (idx >= 0) {
         return items.map((i, n) =>
           n === idx ? { ...i, quantity: i.quantity + action.item.quantity } : i,

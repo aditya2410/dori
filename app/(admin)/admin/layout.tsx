@@ -54,6 +54,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Button variant="ghost" size="sm" asChild>
               <Link href="/admin/community">Community</Link>
             </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/admin/reels">Reels</Link>
+            </Button>
           </nav>
 
           <form action={logout}>

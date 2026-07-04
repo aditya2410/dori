@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { X, Upload, GripVertical, Video, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { compressImage } from '@/lib/compress-image'
 
 export type MediaItem = { type: 'image' | 'video'; url: string }
 
@@ -80,7 +81,9 @@ export function MediaUploader({ existing, onChange }: MediaUploaderProps) {
     const added: MediaItem[] = []
     for (let i = 0; i < files.length; i++) {
       setUploadState({ kind: 'image', totalFiles: files.length, currentIndex: i + 1, progress: 0 })
-      const url = await uploadOne(files[i])
+      // Compress to WebP client-side before the direct upload (photos only; the
+      // video path calls uploadOne separately and is left untouched).
+      const url = await uploadOne(await compressImage(files[i]))
       if (url) added.push({ type: 'image', url })
     }
 

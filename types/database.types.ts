@@ -168,6 +168,7 @@ export interface Database {
           name: string
           description: string | null
           price_paise: number
+          discount_percent: number | null
           images: Json
           video_url: string | null
           video_position: number | null
@@ -183,6 +184,7 @@ export interface Database {
           name: string
           description?: string | null
           price_paise: number
+          discount_percent?: number | null
           images?: Json
           video_url?: string | null
           video_position?: number | null
@@ -198,6 +200,7 @@ export interface Database {
           name?: string
           description?: string | null
           price_paise?: number
+          discount_percent?: number | null
           images?: Json
           video_url?: string | null
           video_position?: number | null
@@ -325,6 +328,96 @@ export interface Database {
           url?: string
           display_order?: number
           is_active?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      home_reels: {
+        Row: {
+          id: string
+          video_url: string
+          product_id: string | null
+          caption: string | null
+          display_order: number
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          video_url: string
+          product_id?: string | null
+          caption?: string | null
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          video_url?: string
+          product_id?: string | null
+          caption?: string | null
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          id: string
+          contact: string
+          channel: string
+          source: string
+          landed_from: string | null
+          path: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          contact: string
+          channel: string
+          source?: string
+          landed_from?: string | null
+          path?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          contact?: string
+          channel?: string
+          source?: string
+          landed_from?: string | null
+          path?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      feedback: {
+        Row: {
+          id: string
+          reason: string | null
+          message: string | null
+          source: string
+          landed_from: string | null
+          path: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          reason?: string | null
+          message?: string | null
+          source?: string
+          landed_from?: string | null
+          path?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          reason?: string | null
+          message?: string | null
+          source?: string
+          landed_from?: string | null
+          path?: string | null
           created_at?: string
         }
         Relationships: []

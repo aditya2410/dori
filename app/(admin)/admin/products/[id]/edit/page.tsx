@@ -22,7 +22,7 @@ export default async function EditProductPage({
   ] = await Promise.all([
     supabase
       .from('products')
-      .select('id, name, slug, description, price_paise, stock, is_active, is_bestseller, bestseller_order, images, video_url, video_position')
+      .select('id, name, slug, description, price_paise, discount_percent, stock, is_active, is_bestseller, bestseller_order, images, video_url, video_position')
       .eq('id', id)
       .single(),
     supabase
