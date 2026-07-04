@@ -159,6 +159,15 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
   }
 
   if (items.length === 0) {
+    // A just-placed order clears the cart, then redirects to confirmation.
+    // Show a redirecting state (not "cart is empty") during that hand-off.
+    if (processing) {
+      return (
+        <div className="container py-24 text-center">
+          <p className="text-sm text-muted-foreground">Placing your order…</p>
+        </div>
+      )
+    }
     return (
       <div className="container py-24 text-center space-y-4">
         <h1 className="font-serif text-3xl font-normal">Your cart is empty</h1>

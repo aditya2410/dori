@@ -79,11 +79,12 @@ export default async function ProductDetailPage({
 
   const images = Array.isArray(product.images) ? (product.images as string[]) : []
 
-  // Discount is only shown when an admin has set a higher compare-at price.
-  const comparePaise = product.compare_at_paise
-  const hasDiscount = typeof comparePaise === 'number' && comparePaise > product.price_paise
-  const percentOff = hasDiscount
-    ? Math.round(((comparePaise - product.price_paise) / comparePaise) * 100)
+  // Discount is driven by an admin-set percentage; the struck-through "original"
+  // is derived from it (price is the amount actually charged).
+  const percentOff = product.discount_percent ?? 0
+  const hasDiscount = percentOff > 0 && percentOff < 100
+  const originalPaise = hasDiscount
+    ? Math.round(product.price_paise / (1 - percentOff / 100))
     : 0
 
   return (
@@ -135,7 +136,7 @@ export default async function ProductDetailPage({
               {hasDiscount && (
                 <>
                   <span className="text-base text-muted-foreground line-through">
-                    {formatPrice(comparePaise!)}
+                    {formatPrice(originalPaise)}
                   </span>
                   <span className="bg-accent px-1.5 py-0.5 text-[11px] font-bold text-accent-foreground">
                     {percentOff}% OFF

@@ -168,7 +168,7 @@ export interface Database {
           name: string
           description: string | null
           price_paise: number
-          compare_at_paise: number | null
+          discount_percent: number | null
           images: Json
           video_url: string | null
           video_position: number | null
@@ -184,7 +184,7 @@ export interface Database {
           name: string
           description?: string | null
           price_paise: number
-          compare_at_paise?: number | null
+          discount_percent?: number | null
           images?: Json
           video_url?: string | null
           video_position?: number | null
@@ -200,7 +200,7 @@ export interface Database {
           name?: string
           description?: string | null
           price_paise?: number
-          compare_at_paise?: number | null
+          discount_percent?: number | null
           images?: Json
           video_url?: string | null
           video_position?: number | null

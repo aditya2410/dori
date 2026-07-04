@@ -21,7 +21,7 @@ interface Product {
   slug: string
   description: string | null
   price_paise: number
-  compare_at_paise: number | null
+  discount_percent: number | null
   stock: number
   is_active: boolean
   is_bestseller: boolean
@@ -152,17 +152,18 @@ export function ProductForm({ product, activeSeries = [], currentSeriesId = null
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="compare_at">Compare-at (₹)</Label>
+          <Label htmlFor="discount_percent">Discount %</Label>
           <Input
-            id="compare_at"
-            name="compare_at"
+            id="discount_percent"
+            name="discount_percent"
             type="number"
             step="1"
             min="0"
-            defaultValue={product?.compare_at_paise ? Math.round(product.compare_at_paise / 100) : ''}
-            placeholder="Optional MRP"
+            max="99"
+            defaultValue={product?.discount_percent ?? ''}
+            placeholder="e.g. 26"
           />
-          <p className="text-xs text-muted-foreground">Shows a strikethrough &amp; % off when higher than price</p>
+          <p className="text-xs text-muted-foreground">Shows a strikethrough original &amp; “% OFF” badge</p>
         </div>
 
         <div className="space-y-1.5">
