@@ -25,15 +25,13 @@ interface StickyBuyBarProps {
  */
 export function StickyBuyBar({ product }: StickyBuyBarProps) {
   const router = useRouter()
-  const { addItem, items } = useCart()
+  const { addItem } = useCart()
   const [justAdded, setJustAdded] = useState(false)
 
   if (product.stock === 0) return null
 
-  const inCart = items.some((i) => i.productId === product.id)
-
   function addToCart() {
-    if (inCart) return
+    // Each tap adds another unit to the bag.
     addItem({
       productId: product.id,
       slug: product.slug,
@@ -64,7 +62,7 @@ export function StickyBuyBar({ product }: StickyBuyBarProps) {
             onClick={() => {
               addToCart()
               setJustAdded(true)
-              setTimeout(() => setJustAdded(false), 1500)
+              setTimeout(() => setJustAdded(false), 1200)
             }}
           >
             {justAdded ? (
