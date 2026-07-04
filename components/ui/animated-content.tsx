@@ -3,9 +3,9 @@
 import { usePathname } from 'next/navigation'
 
 /**
- * Wraps page content with a slide-in-from-left CSS animation.
- * key={pathname} forces React to remount this div on every navigation,
- * which replays the animation — no JavaScript animation libraries needed.
+ * Wraps page content with a soft fade-in on navigation — no directional slide,
+ * to match the calm, elegant redesign. key={pathname} remounts this div on every
+ * navigation, replaying the fade; no JavaScript animation libraries needed.
  */
 export function AnimatedContent({
   children,
@@ -18,7 +18,7 @@ export function AnimatedContent({
   return (
     <div
       key={pathname}
-      className={`animate-in slide-in-from-left-8 fade-in duration-500 ease-out ${className ?? ''}`}
+      className={`animate-in fade-in duration-500 ease-out ${className ?? ''}`}
     >
       {children}
     </div>
