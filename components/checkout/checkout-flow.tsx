@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -14,6 +14,7 @@ import { AddressForm } from '@/components/account/address-form'
 import { formatPrice } from '@/lib/utils'
 import { COD_FEE_PAISE, isCodEligible } from '@/lib/cod'
 import { DEFAULT_SHIPPING_PAISE, qualifiesForFreeShipping } from '@/lib/shipping'
+import { trackMeta } from '@/components/analytics/meta-pixel'
 
 type Address = {
   id: string
@@ -95,6 +96,19 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
   useEffect(() => {
     if (!codAvailable && paymentMethod === 'cod') setPaymentMethod('razorpay')
   }, [codAvailable, paymentMethod])
+
+  // Fire InitiateCheckout once, after the cart hydrates.
+  const initiateFired = useRef(false)
+  useEffect(() => {
+    if (initiateFired.current || !isHydrated || items.length === 0) return
+    initiateFired.current = true
+    trackMeta('InitiateCheckout', {
+      value: subtotalPaise / 100,
+      currency: 'INR',
+      num_items: items.reduce((sum, i) => sum + i.quantity, 0),
+      content_ids: items.map((i) => i.productId),
+    })
+  }, [isHydrated, items, subtotalPaise])
 
   const addressValid = isGuest ? guestValid : !!selectedId
   const canPay = addressValid && billingValid

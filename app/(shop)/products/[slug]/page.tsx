@@ -5,6 +5,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { formatPrice } from '@/lib/utils'
 import { instagramConfig } from '@/lib/config'
 import { AddToCart } from '@/components/shop/add-to-cart'
+import { TrackViewContent } from '@/components/analytics/track-event'
 import { StickyBuyBar } from '@/components/shop/sticky-buy-bar'
 import { DmLove } from '@/components/shop/dm-love'
 import { ImageGallery } from '@/components/shop/image-gallery'
@@ -87,6 +88,7 @@ export default async function ProductDetailPage({
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 md:px-8 py-6 md:py-16">
+      <TrackViewContent id={product.id} name={product.name} value={product.price_paise / 100} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 lg:gap-20">
         {/* Photos, with the video as the last gallery slide */}
         <div className="space-y-3">

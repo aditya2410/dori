@@ -9,6 +9,32 @@ export interface FeedbackInput {
   path?: string
 }
 
+export interface LeadInput {
+  contact: string
+  channel: 'whatsapp' | 'email'
+  landedFrom?: string
+  path?: string
+}
+
+export async function submitLead(input: LeadInput): Promise<{ ok: boolean }> {
+  const contact = (input.contact ?? '').trim().slice(0, 120)
+  if (!contact) return { ok: false }
+
+  const { error } = await createServiceClient().from('leads').insert({
+    contact,
+    channel: input.channel === 'email' ? 'email' : 'whatsapp',
+    source: 'exit_capture',
+    landed_from: (input.landedFrom ?? '').trim().slice(0, 60) || null,
+    path: (input.path ?? '').trim().slice(0, 200) || null,
+  })
+
+  if (error) {
+    console.error('[submitLead]', error)
+    return { ok: false }
+  }
+  return { ok: true }
+}
+
 export async function submitFeedback(input: FeedbackInput): Promise<{ ok: boolean }> {
   const reason = (input.reason ?? '').trim().slice(0, 120) || null
   const message = (input.message ?? '').trim().slice(0, 1000) || null

@@ -6,6 +6,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { formatPrice } from '@/lib/utils'
+import { TrackPurchase } from '@/components/analytics/track-event'
 import type { ShippingAddress, BillingAddress } from '@/types/database.types'
 
 export const metadata: Metadata = { title: 'Order Confirmed' }
@@ -37,7 +38,7 @@ export default async function OrderConfirmationPage({
 
   const { data: orderItems } = await service
     .from('order_items')
-    .select('product_name, quantity, unit_price_paise')
+    .select('product_id, product_name, quantity, unit_price_paise')
     .eq('order_id', id)
 
   const addr = order.shipping_address as unknown as ShippingAddress
@@ -45,6 +46,12 @@ export default async function OrderConfirmationPage({
 
   return (
     <div className="container py-16 max-w-xl">
+      <TrackPurchase
+        orderId={order.id}
+        orderNumber={order.order_number}
+        value={order.total_paise / 100}
+        contentIds={(orderItems ?? []).map((i) => i.product_id).filter((x): x is string => !!x)}
+      />
       <div className="space-y-8">
         {/* Confirmation header */}
         <div className="text-center space-y-3">

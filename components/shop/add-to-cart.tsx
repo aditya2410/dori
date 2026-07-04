@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ShoppingBag, Check, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/contexts/cart'
+import { trackMeta } from '@/components/analytics/meta-pixel'
 
 interface AddToCartProps {
   product: {
@@ -33,6 +34,13 @@ export function AddToCart({ product }: AddToCartProps) {
       name: product.name,
       pricePaise: product.pricePaise,
       image: product.image,
+    })
+    trackMeta('AddToCart', {
+      content_ids: [product.id],
+      content_name: product.name,
+      content_type: 'product',
+      value: product.pricePaise / 100,
+      currency: 'INR',
     })
     setJustAdded(true)
     setTimeout(() => setJustAdded(false), 1200)

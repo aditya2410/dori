@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter, Playfair_Display } from 'next/font/google'
 import Script from 'next/script'
 import { Providers } from './providers'
+import { MetaPixel } from '@/components/analytics/meta-pixel'
 import './globals.css'
 
 const inter = Inter({
@@ -65,6 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <MetaPixel />
         <Providers>{children}</Providers>
       </body>
     </html>

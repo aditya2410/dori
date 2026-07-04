@@ -362,6 +362,36 @@ export interface Database {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          id: string
+          contact: string
+          channel: string
+          source: string
+          landed_from: string | null
+          path: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          contact: string
+          channel: string
+          source?: string
+          landed_from?: string | null
+          path?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          contact?: string
+          channel?: string
+          source?: string
+          landed_from?: string | null
+          path?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           id: string

@@ -37,6 +37,13 @@ export const instagramConfig = {
   url: process.env.NEXT_PUBLIC_INSTAGRAM_URL || 'https://www.instagram.com/dori.jaipur',
 } as const
 
+// First-order discount handed out by the exit-intent capture. `code` must exist
+// as an active coupon in the sales admin for it to actually apply at checkout.
+export const welcomeOffer = {
+  code: process.env.NEXT_PUBLIC_WELCOME_CODE || 'FIRST10',
+  percent: Number(process.env.NEXT_PUBLIC_WELCOME_PERCENT || '10'),
+} as const
+
 // ⚠️ PLACEHOLDERS — replace with real DM messages (with the customer's
 // permission) before merging. Keep them short, lowercase, unpolished:
 // that texture is what makes them read as real.

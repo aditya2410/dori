@@ -6,6 +6,7 @@ import { ShoppingBag, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/contexts/cart'
 import { formatPrice } from '@/lib/utils'
+import { trackMeta } from '@/components/analytics/meta-pixel'
 
 interface StickyBuyBarProps {
   product: {
@@ -38,6 +39,13 @@ export function StickyBuyBar({ product }: StickyBuyBarProps) {
       name: product.name,
       pricePaise: product.pricePaise,
       image: product.image,
+    })
+    trackMeta('AddToCart', {
+      content_ids: [product.id],
+      content_name: product.name,
+      content_type: 'product',
+      value: product.pricePaise / 100,
+      currency: 'INR',
     })
   }
 
