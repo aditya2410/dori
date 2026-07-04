@@ -1,8 +1,7 @@
-import Link from 'next/link'
-import { Play } from 'lucide-react'
 import { createServiceClient } from '@/lib/supabase/server'
 import { formatPrice } from '@/lib/utils'
 import { instagramConfig } from '@/lib/config'
+import { ReelsCarousel, type ReelItem } from './reels-carousel'
 
 type ReelProduct = { slug: string; name: string; price_paise: number; images: unknown }
 
@@ -34,6 +33,20 @@ export async function ShoppableReels() {
     : { data: [] }
   const productMap = new Map((products ?? []).map((p) => [p.id, p as { id: string } & ReelProduct]))
 
+  const items: ReelItem[] = reels.map((reel) => {
+    const product = reel.product_id ? productMap.get(reel.product_id) : undefined
+    const imgs = product && Array.isArray(product.images) ? (product.images as string[]) : []
+    return {
+      id: reel.id,
+      videoUrl: reel.video_url,
+      poster: imgs[0] ?? undefined,
+      href: product ? `/products/${product.slug}` : instagramConfig.url,
+      external: !product,
+      label: product ? `Shop now · ${formatPrice(product.price_paise)}` : (reel.caption ?? 'Watch'),
+      track: product ? `reel-shop:${product.slug}` : `reel-watch:${reel.id}`,
+    }
+  })
+
   return (
     <section className="py-16 md:py-24 overflow-hidden">
       <div className="container mb-8 flex items-baseline justify-between gap-4">
@@ -54,60 +67,7 @@ export async function ShoppableReels() {
         </a>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto px-4 md:px-8 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        {reels.map((reel) => {
-          const product = reel.product_id ? productMap.get(reel.product_id) : undefined
-          const imgs = product && Array.isArray(product.images) ? (product.images as string[]) : []
-          const poster = imgs[0] ?? undefined
-          const href = product ? `/products/${product.slug}` : instagramConfig.url
-          const external = !product
-
-          const card = (
-            <div className="relative aspect-[2/3]">
-              <video
-                src={reel.video_url}
-                poster={poster}
-                muted
-                loop
-                playsInline
-                autoPlay
-                preload="metadata"
-                className="h-full w-full object-cover"
-              />
-              {/* Subtle wash + reel affordance, matching the design's minimal tiles */}
-              <span className="pointer-events-none absolute inset-0 bg-black/20" />
-              <Play aria-hidden className="pointer-events-none absolute top-2.5 right-2.5 size-3.5 fill-white text-white drop-shadow" />
-              <span className="pointer-events-none absolute bottom-2.5 left-2.5 right-2.5 text-[11px] font-semibold text-white drop-shadow">
-                {product ? `Shop now · ${formatPrice(product.price_paise)}` : (reel.caption ?? 'Watch')}
-              </span>
-            </div>
-          )
-
-          const className = 'group relative block w-40 md:w-52 shrink-0 overflow-hidden bg-secondary'
-
-          return external ? (
-            <a
-              key={reel.id}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-track={`reel-watch:${reel.id}`}
-              className={className}
-            >
-              {card}
-            </a>
-          ) : (
-            <Link
-              key={reel.id}
-              href={href}
-              data-track={`reel-shop:${product!.slug}`}
-              className={className}
-            >
-              {card}
-            </Link>
-          )
-        })}
-      </div>
+      <ReelsCarousel reels={items} />
     </section>
   )
 }
