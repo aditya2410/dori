@@ -72,6 +72,7 @@ export function ImageGallery({ images, productName, videoUrl, videoPosition }: I
     media.splice(Math.min(Math.max(pos, 0), media.length), 0, { type: 'video', url: videoUrl })
   }
   const isImageActive = (i: number) => media[i]?.type === 'image'
+  const videoIndex = media.findIndex((m) => m.type === 'video')
 
   const [active, setActive]   = useState(0)
   const [isZoomed, setIsZoomed] = useState(false)
@@ -320,13 +321,13 @@ export function ImageGallery({ images, productName, videoUrl, videoPosition }: I
   }
 
   return (
-    // On mobile, cap the gallery width in vh units so the 3:4 image stays
-    // ~55vh tall — the full image shows but the Buy Now button remains above
-    // the fold. Desktop (md+) keeps the two-column full-width layout.
-    <div className="space-y-3 max-w-[min(41vh,100%)] mx-auto md:max-w-none md:mx-0">
+    // The main photo spans the full phone width (breaking out of the product
+    // page's 1rem mobile padding); the pinned buy bar keeps checkout reachable.
+    // Desktop (md+) keeps the two-column layout within the column.
+    <div className="space-y-3">
       <div
         ref={containerRef}
-        className="aspect-[3/4] bg-secondary overflow-hidden relative"
+        className="aspect-[3/4] bg-secondary overflow-hidden relative -mx-4 md:mx-0"
         style={{
           touchAction: isZoomed ? 'none' : 'pan-y',
           cursor: isZoomed ? 'zoom-out' : 'zoom-in',
@@ -389,6 +390,32 @@ export function ImageGallery({ images, productName, videoUrl, videoPosition }: I
             {media.map((_, i) => (
               <span key={i} className={`size-1.5 rounded-full transition-colors duration-200 ${i === active ? 'bg-white' : 'bg-white/40'}`} />
             ))}
+          </div>
+        )}
+
+        {/* Play reel — jumps to the video slide */}
+        {videoIndex >= 0 && active !== videoIndex && !isZoomed && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); snapStrip(videoIndex) }}
+            data-track="pdp-play-reel"
+            className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-black/70 backdrop-blur-sm px-2.5 py-1.5 text-[11px] font-semibold text-white"
+          >
+            <Play className="size-3 fill-white" /> Play reel
+          </button>
+        )}
+
+        {/* Handmade badge — always true for this brand */}
+        {!isZoomed && (
+          <div className="pointer-events-none absolute bottom-3 left-3 bg-accent/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+            Handmade in Jaipur
+          </div>
+        )}
+
+        {/* Slide counter */}
+        {media.length > 1 && !isZoomed && (
+          <div className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">
+            {active + 1} / {media.length}
           </div>
         )}
 

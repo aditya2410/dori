@@ -41,3 +41,8 @@ next-env.d.ts
 supabase/.branches
 supabase/.temp
 env copy.local
+
+# design handoff artifacts (reference only — not app source)
+/Website design improvements/
+/Website design improvements.zip
+/design_handoff_conversion/

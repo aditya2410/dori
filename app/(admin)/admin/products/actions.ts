@@ -17,6 +17,10 @@ const productSchema = z.object({
   price: z.coerce
     .number({ invalid_type_error: 'Enter a valid price.' })
     .positive('Price must be greater than ₹0.'),
+  compare_at: z.coerce
+    .number({ invalid_type_error: 'Enter a valid compare-at price.' })
+    .min(0)
+    .optional(),
   stock: z.coerce
     .number({ invalid_type_error: 'Enter a valid stock quantity.' })
     .int()
@@ -64,6 +68,7 @@ export async function createProduct(
     slug: formData.get('slug'),
     description: formData.get('description') || undefined,
     price: formData.get('price'),
+    compare_at: formData.get('compare_at') || undefined,
     stock: formData.get('stock'),
     images: formData.get('images') ?? '[]',
     bestseller_order: formData.get('bestseller_order') || '',
@@ -82,6 +87,10 @@ export async function createProduct(
       slug: parsed.data.slug,
       description: parsed.data.description ?? null,
       price_paise: Math.round(parsed.data.price * 100),
+      compare_at_paise:
+        parsed.data.compare_at && parsed.data.compare_at > 0
+          ? Math.round(parsed.data.compare_at * 100)
+          : null,
       stock: parsed.data.stock,
       is_active: formData.get('is_active') === 'on',
       images: parseImages(parsed.data.images),
@@ -119,6 +128,7 @@ export async function updateProduct(
     slug: formData.get('slug'),
     description: formData.get('description') || undefined,
     price: formData.get('price'),
+    compare_at: formData.get('compare_at') || undefined,
     stock: formData.get('stock'),
     images: formData.get('images') ?? '[]',
     bestseller_order: formData.get('bestseller_order') || '',
@@ -137,6 +147,10 @@ export async function updateProduct(
       slug: parsed.data.slug,
       description: parsed.data.description ?? null,
       price_paise: Math.round(parsed.data.price * 100),
+      compare_at_paise:
+        parsed.data.compare_at && parsed.data.compare_at > 0
+          ? Math.round(parsed.data.compare_at * 100)
+          : null,
       stock: parsed.data.stock,
       is_active: formData.get('is_active') === 'on',
       images: parseImages(parsed.data.images),

@@ -14,7 +14,7 @@ export async function BestSellers() {
   if (!bestsellers?.length) return null
 
   return (
-    <section className="py-20 md:py-32">
+    <section id="bestsellers" className="py-20 md:py-32 scroll-mt-16">
       <div className="container">
         <div className="text-center space-y-3 mb-16">
           <p className="font-sans text-xs tracking-[0.3em] text-muted-foreground uppercase">

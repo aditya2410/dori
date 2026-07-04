@@ -25,9 +25,9 @@
     --muted: 40 15% 92%;
     --muted-foreground: 0 0% 45%;
 
-    /* Accent = warm gold */
-    --accent: 42 65% 48%;
-    --accent-foreground: 0 0% 8%;
+    /* Accent = warm bronze-gold (#96701E — from the conversion design) */
+    --accent: 41 67% 35%;
+    --accent-foreground: 40 20% 97%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 40 20% 97%;
@@ -58,7 +58,7 @@
     --muted: 0 0% 14%;
     --muted-foreground: 40 10% 60%;
 
-    --accent: 42 65% 48%;
+    --accent: 41 60% 45%;
     --accent-foreground: 0 0% 6%;
 
     --destructive: 0 63% 31%;

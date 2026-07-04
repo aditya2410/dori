@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus } from 'lucide-react'
+import { Plus, Zap, Lock } from 'lucide-react'
 import { useCart } from '@/contexts/cart'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { AddressForm } from '@/components/account/address-form'
 import { formatPrice } from '@/lib/utils'
 import { COD_FEE_PAISE, isCodEligible } from '@/lib/cod'
+import { DEFAULT_SHIPPING_PAISE, qualifiesForFreeShipping } from '@/lib/shipping'
 
 type Address = {
   id: string
@@ -33,11 +34,10 @@ interface CheckoutFlowProps {
   userPhone: string
 }
 
-// Must match the server-side value in api/orders/create
-const SHIPPING_PAISE = 15_000
-
-function calcShipping(_subtotalPaise: number) {
-  return SHIPPING_PAISE
+// Mirrors the authoritative calc in api/orders/create (via lib/shipping).
+function calcShipping(subtotalPaise: number) {
+  if (qualifiesForFreeShipping(subtotalPaise)) return 0
+  return DEFAULT_SHIPPING_PAISE
 }
 
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
@@ -222,6 +222,7 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
     // 2a. COD — order is already confirmed server-side; go to confirmation.
     if (isCod) {
       clearCart()
+      try { localStorage.setItem('dori_order_placed', '1') } catch {}
       router.push(`/order-confirmation/${orderData.orderId}`)
       return
     }
@@ -261,6 +262,7 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
           })
           if (verifyRes.ok) {
             clearCart()
+            try { localStorage.setItem('dori_order_placed', '1') } catch {}
             router.push(`/order-confirmation/${orderData.orderId}`)
           } else {
             const j = await verifyRes.json()
@@ -289,6 +291,63 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
 
       <div className="container py-12 max-w-2xl space-y-10">
         <h1 className="font-serif text-3xl font-normal">Checkout</h1>
+
+        {/* ── Express payment (leads the page — the biggest drop-off lever) ── */}
+        <section className="space-y-3">
+          <span className="block text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+            Fastest — pay in seconds
+          </span>
+          <div className="flex gap-2.5">
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('razorpay')}
+              data-track="checkout-select-razorpay"
+              className={`flex flex-1 h-12 items-center justify-center gap-2 border text-sm font-semibold transition-colors ${
+                paymentMethod === 'razorpay'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'border-foreground/30 hover:border-foreground'
+              }`}
+            >
+              <Zap className="size-4" /> UPI / GPay · Cards
+            </button>
+            {codAvailable && (
+              <button
+                type="button"
+                onClick={() => setPaymentMethod('cod')}
+                data-track="checkout-select-cod"
+                className={`flex flex-1 flex-col items-center justify-center leading-tight h-12 border text-sm font-semibold transition-colors ${
+                  paymentMethod === 'cod'
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'border-foreground/30 hover:border-foreground'
+                }`}
+              >
+                Cash on Delivery
+                <span
+                  className={`text-[10px] font-medium ${
+                    paymentMethod === 'cod' ? 'opacity-75' : 'text-muted-foreground'
+                  }`}
+                >
+                  Pay when it arrives
+                </span>
+              </button>
+            )}
+          </div>
+          {!codAvailable && (
+            <p className="text-xs text-muted-foreground">
+              Cash on Delivery isn&rsquo;t available for orders of this value — please pay online.
+            </p>
+          )}
+          <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+            <Lock aria-hidden className="size-3 text-[#1f7a4d]" /> 100% secure payments via Razorpay
+          </p>
+        </section>
+
+        {/* OR ENTER DETAILS divider */}
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-[10.5px] uppercase tracking-wider text-muted-foreground">Or enter details</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
 
         {/* ── Delivery address ──────────────────────────────────── */}
         <section className="space-y-4">
@@ -551,43 +610,6 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
         </div>
 
         <Separator />
-
-        {/* ── Payment method ────────────────────────────────────── */}
-        <section className="space-y-3">
-          <h2 className="text-xs uppercase tracking-wider text-muted-foreground">Payment method</h2>
-          {([
-            { value: 'razorpay', title: 'Pay Online', desc: 'Cards, UPI, net banking & wallets · secured by Razorpay' },
-            // COD is hidden above the order-value cap — Pay Online only.
-            ...(codAvailable
-              ? [{ value: 'cod', title: 'Cash on Delivery', desc: 'Pay in cash when your order is delivered' } as const]
-              : []),
-          ] as const).map((opt) => (
-            <label
-              key={opt.value}
-              className={`flex items-start gap-4 border p-4 cursor-pointer transition-colors ${
-                paymentMethod === opt.value ? 'border-foreground' : 'hover:border-foreground/40'
-              }`}
-            >
-              <input
-                type="radio"
-                name="payment-method"
-                value={opt.value}
-                checked={paymentMethod === opt.value}
-                onChange={() => setPaymentMethod(opt.value)}
-                className="mt-0.5 accent-foreground"
-              />
-              <div className="text-sm leading-relaxed">
-                <p className="font-medium">{opt.title}</p>
-                <p className="text-muted-foreground">{opt.desc}</p>
-              </div>
-            </label>
-          ))}
-          {!codAvailable && (
-            <p className="text-xs text-muted-foreground">
-              Cash on Delivery isn’t available for orders of this value — please pay online.
-            </p>
-          )}
-        </section>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
