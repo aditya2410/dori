@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendCapiEvent } from '@/lib/meta'
+import { sendCapiEvent, type CapiEvent } from '@/lib/meta'
 
 // Server-side Conversions API relay. The browser calls this alongside the Pixel
 // event (same event_id) so Meta receives both and dedupes. Reads the _fbp/_fbc
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     eventId?: string
     eventSourceUrl?: string
     customData?: Record<string, unknown>
-    userData?: { email?: string; phone?: string }
+    userData?: CapiEvent['userData']
   }
   try {
     body = await request.json()

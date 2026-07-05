@@ -12,7 +12,18 @@ const GRAPH_VERSION = 'v21.0'
 
 function sha256(value?: string | null): string | undefined {
   if (!value) return undefined
-  return crypto.createHash('sha256').update(value.trim().toLowerCase()).digest('hex')
+  const norm = value.trim().toLowerCase()
+  if (!norm) return undefined
+  return crypto.createHash('sha256').update(norm).digest('hex')
+}
+
+// Digits only; assume India (+91) when a bare 10-digit number is given so Meta
+// can match phone numbers stored in E.164-ish form.
+function normalizePhone(value?: string): string | undefined {
+  if (!value) return undefined
+  let d = value.replace(/[^0-9]/g, '')
+  if (d.length === 10) d = '91' + d
+  return d || undefined
 }
 
 export interface CapiEvent {
@@ -23,6 +34,13 @@ export interface CapiEvent {
   userData?: {
     email?: string
     phone?: string
+    firstName?: string
+    lastName?: string
+    city?: string
+    state?: string
+    zip?: string
+    country?: string
+    externalId?: string
     fbp?: string
     fbc?: string
     ip?: string
@@ -37,15 +55,26 @@ export interface CapiEvent {
 export async function sendCapiEvent(ev: CapiEvent): Promise<void> {
   if (!META_PIXEL_ID || !CAPI_TOKEN) return
 
+  const u = ev.userData ?? {}
   const userData: Record<string, unknown> = {}
-  const em = sha256(ev.userData?.email)
-  const ph = sha256(ev.userData?.phone?.replace(/[^0-9]/g, ''))
-  if (em) userData.em = em
-  if (ph) userData.ph = ph
-  if (ev.userData?.fbp) userData.fbp = ev.userData.fbp
-  if (ev.userData?.fbc) userData.fbc = ev.userData.fbc
-  if (ev.userData?.ip) userData.client_ip_address = ev.userData.ip
-  if (ev.userData?.userAgent) userData.client_user_agent = ev.userData.userAgent
+  const set = (key: string, hashed?: string) => {
+    if (hashed) userData[key] = hashed
+  }
+  set('em', sha256(u.email))
+  set('ph', sha256(normalizePhone(u.phone)))
+  set('fn', sha256(u.firstName))
+  set('ln', sha256(u.lastName))
+  set('ct', sha256(u.city?.replace(/\s+/g, '')))
+  set('st', sha256(u.state?.replace(/\s+/g, '')))
+  set('zp', sha256(u.zip?.replace(/\s+/g, '')))
+  set('country', sha256(u.country))
+  // external_id is an opaque, stable visitor id — sent raw so the browser Pixel
+  // and CAPI values match; Meta normalises it.
+  if (u.externalId) userData.external_id = u.externalId
+  if (u.fbp) userData.fbp = u.fbp
+  if (u.fbc) userData.fbc = u.fbc
+  if (u.ip) userData.client_ip_address = u.ip
+  if (u.userAgent) userData.client_user_agent = u.userAgent
 
   const payload = {
     data: [

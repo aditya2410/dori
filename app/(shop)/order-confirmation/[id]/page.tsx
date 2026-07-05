@@ -51,6 +51,14 @@ export default async function OrderConfirmationPage({
         orderNumber={order.order_number}
         value={order.total_paise / 100}
         contentIds={(orderItems ?? []).map((i) => i.product_id).filter((x): x is string => !!x)}
+        customer={{
+          email: addr.contact_email ?? undefined,
+          phone: addr.phone ?? undefined,
+          name: addr.full_name,
+          city: addr.city,
+          state: addr.state,
+          zip: addr.pincode,
+        }}
       />
       <div className="space-y-8">
         {/* Confirmation header */}

@@ -34,11 +34,20 @@ export function TrackPurchase({
   orderNumber,
   value,
   contentIds,
+  customer,
 }: {
   orderId: string
   orderNumber: string
   value: number
   contentIds: string[]
+  customer?: {
+    email?: string
+    phone?: string
+    name?: string
+    city?: string
+    state?: string
+    zip?: string
+  }
 }) {
   useEffect(() => {
     const key = `meta_purchase_${orderId}`
@@ -48,14 +57,28 @@ export function TrackPurchase({
     } catch {
       /* ignore */
     }
-    trackMeta('Purchase', {
-      value,
-      currency: 'INR',
-      content_type: 'product',
-      content_ids: contentIds,
-      order_id: orderNumber,
-      num_items: contentIds.length,
-    })
-  }, [orderId, orderNumber, value, contentIds])
+    const [firstName, ...rest] = (customer?.name ?? '').trim().split(/\s+/)
+    trackMeta(
+      'Purchase',
+      {
+        value,
+        currency: 'INR',
+        content_type: 'product',
+        content_ids: contentIds,
+        order_id: orderNumber,
+        num_items: contentIds.length,
+      },
+      {
+        email: customer?.email,
+        phone: customer?.phone,
+        firstName: firstName || undefined,
+        lastName: rest.join(' ') || undefined,
+        city: customer?.city,
+        state: customer?.state,
+        zip: customer?.zip,
+        country: 'in',
+      },
+    )
+  }, [orderId, orderNumber, value, contentIds, customer])
   return null
 }

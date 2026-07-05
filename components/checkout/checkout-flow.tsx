@@ -102,13 +102,24 @@ export function CheckoutFlow({ isGuest, addresses, userEmail, userName, userPhon
   useEffect(() => {
     if (initiateFired.current || !isHydrated || items.length === 0) return
     initiateFired.current = true
-    trackMeta('InitiateCheckout', {
-      value: subtotalPaise / 100,
-      currency: 'INR',
-      num_items: items.reduce((sum, i) => sum + i.quantity, 0),
-      content_ids: items.map((i) => i.productId),
-    })
-  }, [isHydrated, items, subtotalPaise])
+    const [firstName, ...rest] = (userName || '').trim().split(/\s+/)
+    trackMeta(
+      'InitiateCheckout',
+      {
+        value: subtotalPaise / 100,
+        currency: 'INR',
+        num_items: items.reduce((sum, i) => sum + i.quantity, 0),
+        content_ids: items.map((i) => i.productId),
+      },
+      {
+        email: userEmail || undefined,
+        phone: userPhone || undefined,
+        firstName: firstName || undefined,
+        lastName: rest.join(' ') || undefined,
+        country: 'in',
+      },
+    )
+  }, [isHydrated, items, subtotalPaise, userEmail, userName, userPhone])
 
   const addressValid = isGuest ? guestValid : !!selectedId
   const canPay = addressValid && billingValid
