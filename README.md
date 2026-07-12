@@ -203,3 +203,39 @@ After any schema change:
 ```bash
 npx supabase gen types typescript --project-id <your-project-id> > types/database.types.ts
 ```
+
+---
+
+## Media Pipeline (images & videos)
+
+Product media lives in Supabase Storage (`product-images`, `product-videos`).
+Uploads are cached for a year on upload (`cache-control: max-age=31536000`) so the
+CDN/browser stop re-fetching on every view — this is what keeps Supabase egress
+down under ad traffic. Images are also compressed to WebP client-side before upload.
+
+**Videos are not transcoded automatically.** Vercel Hobby can't run ffmpeg
+server-side, and video bytes upload client→Supabase directly (bypassing the app),
+so raw phone exports (often HEVC/4K, tens of MB) would otherwise go up as-is —
+oversized and, for HEVC, unplayable in Chrome/Firefox. After uploading or replacing
+a product/reel/series video in admin, run the normalizer:
+
+```bash
+# requires ffmpeg on PATH (brew install ffmpeg)
+npx tsx scripts/compress-videos.ts            # dry run — shows what it would do
+npx tsx scripts/compress-videos.ts --apply    # re-encode + re-upload in place
+```
+
+It's idempotent: it downscales to ≤1280px, transcodes to H.264 MP4 (CRF 24, no
+audio), and re-uploads in place — skipping any video already optimized, so it's
+safe to run anytime. URLs are unchanged, so no rows need editing.
+
+### Maintenance scripts
+
+| Script | Purpose |
+|---|---|
+| `scripts/compress-videos.ts` | Normalize product videos to web-optimized H.264 (run after uploads). |
+| `scripts/fix-storage-cache.ts` | Repair `cache-control` on existing objects; `--delete-orphans` (off by default) prunes unreferenced files. |
+| `scripts/reprocess-images.ts` | Downscale oversized image originals in place (backs up to `originals/`). |
+
+All three read `.env.local` and log applied changes to the `ops_log` table. On
+Node < 20 they need `NODE_EXTRA_CA_CERTS` pointing at an exported system-CA PEM.

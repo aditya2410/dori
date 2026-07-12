@@ -40,7 +40,9 @@ export async function POST(request: NextRequest) {
     .from('product-images')
     .upload(path, Buffer.from(bytes), {
       contentType: file.type,
-      cacheControl: '3600',
+      // 1 year — product images are content-addressed by a unique path and never
+      // change in place, so a long cache is safe and avoids per-view revalidation.
+      cacheControl: '31536000',
     })
 
   if (error) {
@@ -51,9 +53,6 @@ export async function POST(request: NextRequest) {
   const {
     data: { publicUrl },
   } = serviceClient.storage.from('product-images').getPublicUrl(data.path)
-
-  console.log('[upload] stored path:', data.path)
-  console.log('[upload] public URL:', publicUrl)
 
   return NextResponse.json({ url: publicUrl })
 }

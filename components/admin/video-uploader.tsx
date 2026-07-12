@@ -52,6 +52,9 @@ export function VideoUploader({ existingUrl, onChange }: VideoUploaderProps) {
 
       xhr.open('PUT', signedUrl)
       xhr.setRequestHeader('Content-Type', file.type)
+      // Cache for a year — without this the object lands as `no-cache`, forcing the
+      // CDN/browser to re-fetch the full video on every view (Supabase egress).
+      xhr.setRequestHeader('cache-control', 'max-age=31536000')
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           setUrl(publicUrl)
@@ -132,7 +135,9 @@ export function VideoUploader({ existingUrl, onChange }: VideoUploaderProps) {
             <Video className="size-3.5" />
             {uploading ? `Uploading… ${progress}%` : 'Upload video'}
           </Button>
-          <p className="text-xs text-muted-foreground">MP4, WebM, MOV — max 500 MB</p>
+          <p className="text-xs text-muted-foreground">
+            MP4, WebM, MOV — max 500 MB. Run <code>scripts/compress-videos.ts</code> after saving to optimize.
+          </p>
         </div>
       )}
 

@@ -64,6 +64,9 @@ export function MediaUploader({ existing, onChange }: MediaUploaderProps) {
       }
       xhr.open('PUT', signedUrl)
       xhr.setRequestHeader('Content-Type', file.type)
+      // Cache for a year — without this the object lands as `no-cache`, forcing the
+      // CDN/browser to re-fetch on every view (Supabase egress).
+      xhr.setRequestHeader('cache-control', 'max-age=31536000')
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) resolve(publicUrl)
         else { setError('Upload failed. Please try again.'); resolve(null) }
@@ -206,7 +209,8 @@ export function MediaUploader({ existing, onChange }: MediaUploaderProps) {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Images: JPEG, PNG, WebP — max 20 MB each · Video: MP4, WebM, MOV — max 500 MB · Drag to reorder
+        Images: JPEG, PNG, WebP — max 20 MB each · Video: MP4, WebM, MOV — max 500 MB (run{' '}
+        <code>scripts/compress-videos.ts</code> after saving) · Drag to reorder
       </p>
 
       {error && <p className="text-xs text-destructive">{error}</p>}
