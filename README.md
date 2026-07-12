@@ -234,8 +234,14 @@ safe to run anytime. URLs are unchanged, so no rows need editing.
 | Script | Purpose |
 |---|---|
 | `scripts/compress-videos.ts` | Normalize product videos to web-optimized H.264 (run after uploads). |
+| `scripts/compress-product-images.ts` | Re-encode `product-images` to WebP (≤1600px) in place. |
 | `scripts/fix-storage-cache.ts` | Repair `cache-control` on existing objects; `--delete-orphans` (off by default) prunes unreferenced files. |
 | `scripts/reprocess-images.ts` | Downscale oversized image originals in place (backs up to `originals/`). |
+
+> **Note on egress:** product/gallery/card images render through Next/Image, so
+> they're served by Vercel's optimizer (fetched from Supabase ~once per 31 days),
+> not per view. The dominant Supabase egress is **video** (direct `<video>`) plus
+> a few plain-`<img>` home surfaces — keep videos small and cached.
 
 All three read `.env.local` and log applied changes to the `ops_log` table. On
 Node < 20 they need `NODE_EXTRA_CA_CERTS` pointing at an exported system-CA PEM.
